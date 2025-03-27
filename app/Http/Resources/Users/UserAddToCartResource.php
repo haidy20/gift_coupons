@@ -11,7 +11,7 @@ class UserAddToCartResource extends JsonResource
         return [
             'provider_id' => $this->provider->id,
             'provider_name' => $this->provider->username,
-            'provider_image' => optional($this->provider->media->first())->file_path,
+            // 'provider_image' => optional($this->provider->media->first())->file_path,
 
             'latitude' => $this->provider->latitude,
             'longitude' => $this->provider->longitude,

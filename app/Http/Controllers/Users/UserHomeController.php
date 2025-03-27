@@ -35,8 +35,6 @@ class UserHomeController extends Controller
         ], 200);
     }
 
-
-
     // Search Provider in all categories
     public function searchProvider(SearchProviderRequest $request)
     {
@@ -157,16 +155,37 @@ class UserHomeController extends Controller
     }
 
 
+    // public function providerDetails($id)
+    // {
+    //     $provider = UsersAccount::with('vouchers')->findOrFail($id);
+    //     if ($provider->vouchers->isEmpty()) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'This provider has no vouchers',
+    //             'data' => null
+
+    //         ], 400);
+    //     }
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'message' => 'Provider Details retrieved successfully.',
+    //         'data' => new ProviderDetailsResourceResource($provider)
+    //     ], 200);
+    // }
+
     // Details of provider
     public function providerDetails($id)
     {
-        $provider = UsersAccount::with('vouchers')->findOrFail($id);
+        $provider = UsersAccount::with(['vouchers' => function ($query) {
+            $query->whereRaw('DATE_ADD(start_date, INTERVAL duration_days DAY) >= CURDATE()');
+        }])->findOrFail($id);
+
         if ($provider->vouchers->isEmpty()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'This provider has no vouchers',
+                'message' => 'This provider has no active vouchers',
                 'data' => null
-
             ], 400);
         }
 

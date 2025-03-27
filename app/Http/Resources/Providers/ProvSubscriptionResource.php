@@ -10,8 +10,9 @@ class ProvSubscriptionResource extends JsonResource
     public function toArray(Request $request): array
     {
         // ✅ جلب الترجمة بناءً على اللغة المختارة
-        $locale = $request->header('Accept-Language', 'en'); // اللغة الافتراضية الإنجليزية
+        $locale = $request->header('Accept-Language'); // اللغة الافتراضية الإنجليزية
         $translation = $this->translations()->where('locale', $locale)->first();
+        // dd($translation ? $translation->title : 'N/A');
 
         return [
             'id' => $this->id,

@@ -24,7 +24,6 @@ class ProvLoginResource extends JsonResource
            'message' => 'Login successfully',
            'token_type' => 'Bearer',
            'access_token' => $this->token,
-        //    'expires_in' => $this->expiresIn,
            'data' => new ProvResource($this->resource), // Include user details if needed
        ];
    }

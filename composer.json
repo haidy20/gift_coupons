@@ -8,11 +8,12 @@
         "php": "^8.1",
         "astrotomic/laravel-translatable": "^11.15",
         "guzzlehttp/guzzle": "^7.2",
-        "intervention/image": "*",
+        "intervention/image": "2.7",
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
         "simplesoftwareio/simple-qrcode": "^4.2",
+        "spatie/laravel-permission": "^6.16",
         "spatie/laravel-translatable": "^6.11",
         "stichoza/google-translate-php": "^5.2",
         "tymon/jwt-auth": "^2.1"

@@ -17,6 +17,8 @@ class AdminCategoryController extends Controller
     public function index()
     {
         $user = auth('api')->user();
+        // $user = auth('api')->user();
+
         if ($user->role !== 'admin') {
             return response()->json([
                 'status' => 'error',
@@ -24,6 +26,7 @@ class AdminCategoryController extends Controller
                 'data' => null
             ], 403);
         }
+    
         $categories = Category::get();
         // $categories = Category::all();
 
@@ -45,13 +48,13 @@ class AdminCategoryController extends Controller
                 'data' => null
             ], 403);
         }
-    
+
         $category = Category::create($request->validated());
         // التأكد من أن هناك صورة مرفوعة
         if ($request->hasFile('image')) {
             $category->setImageAttribute($request->file('image'));
         }
-    
+
         return response()->json([
             'success' => true,
             'message' => 'Category created successfully',
@@ -59,7 +62,7 @@ class AdminCategoryController extends Controller
         ], 200);
     }
 
-    
+
     // Show a single category
     public function show($id)
     {
@@ -124,7 +127,7 @@ class AdminCategoryController extends Controller
         }
 
         $category->delete();
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Category deleted successfully',

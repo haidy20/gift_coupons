@@ -23,16 +23,14 @@ use App\Http\Requests\Users\SendVerificationCodeRequest;
 use App\Http\Requests\Users\VerifyCodeRequest;
 use App\Http\Requests\Users\ResetPasswordRequest;
 use App\Http\Requests\Users\UserChangePassRequest;
-
-
-
+use App\Http\Requests\Users\UserUpdateProfileRequest;
 
 
 // Responses
 use App\Http\Resources\Users\UserRegisterResource;
 use App\Http\Resources\Users\UserLoginResource;
-
-
+use App\Http\Resources\Users\UserProfileResource;
+use App\Http\Resources\Users\UserUpdateProfileResource;
 
 
 class UserAuthController extends Controller
@@ -90,6 +88,76 @@ class UserAuthController extends Controller
         return new UserLoginResource($user, $token, auth('api')->factory()->getTTL() * 60);
     }
 
+    public function profile()
+    {
+        // Get the authenticated user
+        $user = auth('api')->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'user not found.',
+                'data' => null,
+            ], 404); // أو يمكنك استخدام 403
+        }
+
+        // Ensure the user's account is active (verified)
+        if (!$user->is_active) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your account is not active. Please verify your account.',
+                'data' => null,
+            ], 403);
+        }
+
+        // Return the user's profile
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile successfully retrived',
+            'data' => new UserProfileResource($user),
+        ], 200);
+    }
+
+    public function updateProfile(UserUpdateProfileRequest $request)
+    {
+        $user = auth('api')->user();
+    
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found',
+                'data' => null,
+            ], 404);
+        }
+    
+        if (!$user->is_active) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your account is not active. Please verify your account.',
+                'data' => null,
+            ], 403);
+
+        }
+        // $user = UsersAccount::with('media')->find(auth()->id());
+
+        // تحديث الصورة مباشرة باستخدام setter
+        if ($request->hasFile('image')) {
+            $user->image = $request->file('image'); // سيستدعي setImageAttribute تلقائيًا
+        }
+    
+        // تحديث باقي بيانات المستخدم
+        $user->update($request->validated());
+    
+        // استرجاع البيانات مع الوسائط
+        $userWithMedia = UsersAccount::with('media', 'country')->find($user->id);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile updated successfully!',
+            'data' => new UserUpdateProfileResource($userWithMedia),
+        ], 200);
+    }
+
     public function logout()
     {
         // التحقق من المستخدم الحالي
@@ -101,7 +169,7 @@ class UserAuthController extends Controller
                 'success' => false,
                 'message' => 'You must be logged in to log out.',
                 'data' => null
-            ], 401);
+            ], 404);
         }
 
         // تسجيل الخروج من النظام
@@ -114,7 +182,7 @@ class UserAuthController extends Controller
         ]);
     }
 
-    public function deleteAccount(Request $request)
+    public function deleteAccount()
     {
         $user = auth('api')->user(); // جلب المستخدم المسجل
 
@@ -251,57 +319,55 @@ class UserAuthController extends Controller
     }
 
     // Change Password 
-
     public function changePassword(UserChangePassRequest $request)
-{
-    $user = auth('api')->user();
+    {
+        $user = auth('api')->user();
 
-    // التحقق من دور المستخدم
-    if ($user->role !== 'client') {
+        // التحقق من دور المستخدم
+        if ($user->role !== 'client') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized. client access only.',
+                'data' => null
+            ], 403);
+        }
+
+        // التحقق مما إذا كان الحساب نشطًا
+        if (!$user->is_active) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Your account is not active. Please verify your account.',
+                'data' => null
+            ], 403);
+        }
+
+        // التحقق من كلمة المرور الحالية
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Current password is incorrect.',
+                'data' => null
+            ], 400);
+        }
+
+        // التحقق من أن كلمة المرور الجديدة مختلفة عن القديمة
+        if (Hash::check($request->new_password, $user->password)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'New password cannot be the same as the old one.',
+                'data' => null
+            ], 400);
+        }
+
+        // تحديث كلمة المرور
+        $user->update([
+            'password' => $request->new_password
+        ]);
+
         return response()->json([
-            'status' => 'error',
-            'message' => 'Unauthorized. client access only.',
+            'status' => 'success',
+            'message' => 'Password changed successfully!',
             'data' => null
-        ], 403);
+        ], 200);
     }
-
-    // التحقق مما إذا كان الحساب نشطًا
-    if (!$user->is_active) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Your account is not active. Please verify your account.',
-            'data' => null
-        ], 403);
-    }
-
-    // التحقق من كلمة المرور الحالية
-    if (!Hash::check($request->current_password, $user->password)) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Current password is incorrect.',
-            'data' => null
-        ], 400);
-    }
-
-    // التحقق من أن كلمة المرور الجديدة مختلفة عن القديمة
-    if (Hash::check($request->new_password, $user->password)) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'New password cannot be the same as the old one.',
-            'data' => null
-        ], 400);
-    }
-
-    // تحديث كلمة المرور
-    $user->update([
-        'password' => $request->new_password
-    ]);
-
-    return response()->json([
-        'status' => 'success',
-        'message' => 'Password changed successfully!',
-        'data' => null
-    ], 200);
-}
-
 }

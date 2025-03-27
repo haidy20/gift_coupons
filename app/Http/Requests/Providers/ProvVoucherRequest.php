@@ -22,7 +22,8 @@ class ProvVoucherRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required|string|unique:vouchers,name,' . $this->voucher,
+            // 'name' => 'required|string|unique:vouchers,name,' . $this->voucher,
+            'name' => 'required|string',
             'amount' => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'start_date' => 'required|date|after_or_equal:today',

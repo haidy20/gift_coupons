@@ -23,7 +23,6 @@ class UserLoginResource extends JsonResource
             'message' => 'Login successfully',
             'token_type' => 'Bearer',
             'access_token' => $this->token,
-            // 'expires_in' => $this->expiresIn,
             'data' => new UserResource($this->resource), // Include user details if needed
         ];
     }

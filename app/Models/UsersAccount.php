@@ -4,17 +4,22 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Auth\Authenticatable;
 
+
 class UsersAccount extends Model implements JWTSubject, AuthenticatableContract
 {
-    use HasFactory, HasApiTokens, Authenticatable, Notifiable;
+    use HasFactory, HasApiTokens, Authenticatable, Notifiable ;
+
 
     protected $table = 'users_accounts';
+    // protected $guard_name = 'api';
+    // protected $with = ['roles', 'permissions'];
 
     // Specify guarded fields
     protected $guarded = [
@@ -44,29 +49,77 @@ class UsersAccount extends Model implements JWTSubject, AuthenticatableContract
     {
         return [];
     }
+
+    // public function getImageAttribute($value)
+    // {
+    //     dd($value);
+    //     // $media = $this->media()->first(); // Fetch the latest media record
+    //     return $value ? url('storage/' . $value) : null;
+    // }
+
+
+    // public function setImageAttribute($file)
+    // {
+    //     if ($file) {
+    //         if ($this->media) { 
+    //             $oldImagePath = storage_path("profiles/".$this->media->file_path); 
+    //             dd($this->media->file_path , $oldImagePath);
+
+
+    //             if (file_exists($oldImagePath)) {
+    //                 // dd('ahmed');
+    //                 unlink($oldImagePath); // حذف الصورة من السيرفر
+    //             }
+
+    //             $this->media()->delete(); // حذف سجل الصورة القديمة من قاعدة البيانات
+    //         }
+
+    //         $filePath = $file->store('profiles', 'public');
+
+    //         // التحقق مما إذا كان هناك سجل وسائط موجود
+    //             $this->media()->create([
+    //                 'file_path' => $filePath,
+    //                 'mediable_id' => $this->id,
+    //                 'mediable_type' => $this->role ?? 'default_role', // تأكد أن role ليست null
+    //             ]);
+
+
+    //         $this->image = asset($filePath);
+    //     }
+    // }
+
     public function getImageAttribute($value)
     {
-        return $value ? url('storage/' . $value) : null;
+        return $value ? asset("storage/{$value}") : null; // ✅ التأكد من إرجاع المسار الصحيح
     }
+
     public function setImageAttribute($file)
     {
-        // إذا كان هناك صورة قديمة، قم بحذفها
-        if ($this->media()->exists()) {
-            $this->media()->delete();
-        }
-
-        // إذا كانت الصورة الجديدة موجودة، قم برفعها وحفظ المسار
         if ($file) {
+            // **حذف الصورة القديمة إن وجدت**
+            if ($this->media) {
+                $oldImagePath = public_path("storage/" . $this->media->file_path);
+    
+                if (file_exists($oldImagePath)) {
+                    unlink($oldImagePath); // 🔥 حذف الصورة من السيرفر
+                }
+    
+                $this->media()->delete(); // 🗄️ حذف السجل القديم من قاعدة البيانات
+            }
+    
+            // **رفع الصورة الجديدة**
             $filePath = $file->store('profiles', 'public');
+    
+            // **إنشاء سجل جديد في جدول media**
             $this->media()->create([
                 'file_path' => $filePath,
                 'mediable_id' => $this->id,
-                'mediable_type' => $this->role,
+                'mediable_type' => $this->role ?? 'default_role',
             ]);
-
-            $this->image = asset($filePath);
         }
     }
+    
+
 
 
     public function setPasswordAttribute($value)
@@ -78,7 +131,7 @@ class UsersAccount extends Model implements JWTSubject, AuthenticatableContract
     // Relationships
     public function media()
     {
-        return $this->morphMany(Media::class, 'mediable');
+        return $this->morphOne(Media::class, 'mediable');
     }
 
     public function country()
@@ -101,7 +154,7 @@ class UsersAccount extends Model implements JWTSubject, AuthenticatableContract
     public function userVouchers()
     {
         return $this->belongsToMany(Voucher::class, 'user_vouchers', 'voucher_id', 'user_id')
-            ->withPivot('purchase_date', 'expiry_date', 'used_date')
+            ->withPivot('purchase_date', 'expiry_date', 'used_date', 'status')
             ->withTimestamps();
     }
 
@@ -148,31 +201,48 @@ class UsersAccount extends Model implements JWTSubject, AuthenticatableContract
         return $this->hasMany(Checkout::class, 'user_id');
     }
 
+    // user may has many voucher so has many qrcode
+    public function qrCode()
+    {
+        return $this->hasMany(QrCode::class, 'user_id');
+    }
+
+    // المستخدمين الذين حصلوا على الفاوتشر وتم تسجيلهم في `scanned_users`
+    public function scannedVouchers()
+    {
+        return $this->hasMany(ScannedUser::class);
+    }
+
+    // البروفايدر الذي قام بمسح الفاوتشر
+    public function scannedByProvider()
+    {
+        return $this->hasMany(ScannedUser::class, 'provider_id');
+    }
 
 
+    public function feedbacks()
+    {
+        return $this->hasMany(Feedback::class, 'user_id');
+    }
 
+    // في UsersAccount
+    public function wallet()
+    {
+        return $this->hasOne(Wallet::class, 'provider_id');
+    }
 
+    public function provider()
+    {
+        return $this->belongsTo(Wallet::class, 'provider_id');
+    }
 
-    // public function favoriteProviders()
-    // {
-    //     return $this->belongsToMany(UsersAccount::class, 'provider_favorites', 'user_id', 'provider_id')
-    //         ->wherePivot('type', 'provider')
-    //         ->withTimestamps();
-    // }
+    public function transaction()
+    {
+        return $this->hasMany(Transaction::class, 'provider_id');
+    }
 
-
-    // Define the relationship between the provider and their ratings
-    // public function userRatings()
-    // {
-    //     return $this->hasMany(UserRating::class, 'user_id'); // Assuming a hasMany relationship
-    // }
-    // public function ProviderRatings()
-    // {
-    //     return $this->hasMany(ProviderRating::class, 'provider_id'); // Assuming a hasMany relationship
-    // }
-
-    // public function provider()
-    // {
-    //     return $this->belongsTo(Wallet::class,'provider_id');
-    // }
+    public function withdrawal()
+    {
+        return $this->hasMany(WithdrawalRequest::class, 'provider_id');
+    }
 }

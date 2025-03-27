@@ -9,6 +9,8 @@ return new class extends Migration {
         Schema::create('qr_codes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('voucher_id')->constrained()->onDelete('cascade'); // ربط الفاوتشر بالـ QR Code
+            $table->foreignId('user_id')->constrained('users_accounts')->onDelete('cascade'); // ✅ ربط الـ QR Code بالمستخدم
+            $table->foreignId('provider_id')->constrained('users_accounts')->onDelete('cascade'); // ✅ ربط الـ QR Code بالمستخدم
             $table->string('qr_code_path'); // مسار تخزين صورة QR Code
             $table->timestamps();
         });

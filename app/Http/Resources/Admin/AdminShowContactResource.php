@@ -18,7 +18,9 @@ class AdminShowContactResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'phone' => $this->phone,
-            'message'=>$this->message
+            'message'=>$this->message,
+            'read_at' => $this->read_at, // إضافة حقل read_at
+
         ]; 
        }
 }

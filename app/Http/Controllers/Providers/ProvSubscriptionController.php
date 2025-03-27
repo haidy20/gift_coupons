@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Providers;
 
 use App\Http\Controllers\Controller;
-
+use App\Notifications\GeneralNotification;
 use Illuminate\Http\Request;
 use App\Models\Subscription;
 use App\Models\UsersAccount;
-
 
 // Requests
 use App\Http\Requests\Providers\ProvSubscriptionRequest;
@@ -51,6 +50,7 @@ class ProvSubscriptionController extends Controller
         ]);
     }
 
+    // Show subscriptions with my sub
     public function showUpgradeSubscriptions()
     {
         $provider = UsersAccount::find(auth()->id());
@@ -82,35 +82,99 @@ class ProvSubscriptionController extends Controller
         ]);
     }
 
-
+    // Show one subscription
     public function showOneSubscription($id)
     {
-        // ✅ جلب الباقة بناءً على الـ ID
-        $subscription = Subscription::find($id);
-    
-        // ✅ التحقق من وجود الباقة
-        if (!$subscription) {
+        // ✅ الحصول على المستخدم المسجل حاليًا (بروفايدر)
+        $provider = UsersAccount::find(auth()->id());
+
+        // ✅ التأكد من أن المستخدم هو بروفايدر فقط
+        if ($provider->role !== 'provider') {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Subscription not found.',
+                'message' => 'Only providers can see subscriptions.',
                 'data' => null,
-            ], 404);
+            ], 403);
         }
-    
+
+        // ✅ التحقق مما إذا كان البروفايدر يمتلك هذا الاشتراك
+        if ($provider->subscription_id != $id) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to view this subscription or not found.',
+                'data' => null,
+            ], 403);
+        }
+
+        // ✅ جلب الباقة بناءً على الـ ID
+        $subscription = Subscription::find($id);
+        // ✅ التحقق من وجود الباقة
+        // if (!$subscription) {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Subscription not found.',
+        //         'data' => null,
+        //     ], 404);
+        // }
+        // $subscription = Subscription::find($provider->subscription_id);
+
+        // ✅ جلب تاريخ انتهاء الاشتراك من جدول users_accounts
+        $subscriptionExpiresAt = UsersAccount::where('subscription_id', $id)->value('subscription_expires_at');
+
+        if ($provider->subscription_expires_at && now()->greaterThan($provider->subscription_expires_at)) {
+            $provider->update([
+                'subscription_id' => null,
+                'subscription_expires_at' => null,
+            ]);
+        }
+        // ✅ التحقق مما إذا كان الاشتراك منتهيًا أو غير موجود
+        if (is_null($subscriptionExpiresAt)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Your subscription has expired. Please subscribe to a plan.',
+                'data' => null,
+            ], 400);
+        }
+
+        // if (now()->greaterThan($subscriptionExpiresAt)) {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Your subscription has expired. Please subscribe to a new plan.',
+        //         'data' => null,
+        //     ], 400);
+        // }
         return response()->json([
             'status' => 'success',
             'message' => 'Subscription details retrieved successfully',
-            'data' => new ProvSubUpgradeResource($subscription),
+            'data' => [
+                'subscription' => new ProvSubUpgradeResource($subscription),
+                'subscription_expires_at' => $subscriptionExpiresAt,
+            ],
+
         ]);
     }
-    
-
     // Select one to subscribe
     public function subscribeToPlan(ProvSubscriptionRequest $request)
     {
         // ✅ الحصول على المستخدم المسجل حاليًا (بروفايدر)
         $provider = UsersAccount::find(auth()->id());
 
+        /////////////////////////////////////////////////////////////////////
+        // ✅ التحقق مما إذا كان الاشتراك قد انتهى
+        if ($provider->subscription_expires_at && now()->greaterThan($provider->subscription_expires_at)) {
+            $provider->update([
+                'subscription_id' => null,
+                'subscription_expires_at' => null,
+            ]);
+        }
+
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Your subscription has expired. Please subscribe to a new plan.',
+        //         'data' => null,
+        //     ], 400);
+        // }
+        /////////////////////////////////////////////////////////////////////
         // ✅ التأكد من أن المستخدم هو بروفايدر فقط
         if ($provider->role !== 'provider') {
             return response()->json([
@@ -139,7 +203,7 @@ class ProvSubscriptionController extends Controller
         }
 
         // استرجاع المدة بالطريقة الصحيحة
-        $duration = $subscription->translations->first()->duration ?? null;
+        $duration = $subscription->translations->first()->duration ?? 'Unknown duration';
         // حساب تاريخ انتهاء الصلاحية
         $expirationDate = now()->addDays(intval($duration))->format('Y-m-d H:i:s');
         // تحديث بيانات البروفايدر
@@ -148,6 +212,15 @@ class ProvSubscriptionController extends Controller
             'subscription_expires_at' => $expirationDate,
         ]);
 
+        // **إرسال إشعار للأدمن**
+        $admins = UsersAccount::where('role', 'superAdmin')->first();
+        $planTitle = $subscription->translations->where('locale', $request->header('Accept-Language'))->first()->title ?? 'Unknown Plan';
+
+        $admins->notify(new GeneralNotification(
+            'New Subscription',
+            "provider {$provider->username} has subscribed to {$planTitle}. Expiry at: {$expirationDate}."
+        ));
+
         return response()->json([
             'status' => 'success',
             'message' => 'Subscription successful!',
@@ -155,12 +228,28 @@ class ProvSubscriptionController extends Controller
         ], 200);
     }
 
-
     // upgrade the subscription 
     public function upgradeSubscription(ProvSubscriptionRequest $request)
     {
         // ✅ الحصول على المستخدم المسجل حاليًا (بروفايدر)
         $provider = UsersAccount::find(auth()->id());
+
+        /////////////////////////////////////////////////////////////////////
+        // // ✅ التحقق مما إذا كان الاشتراك قد انتهى
+        if ($provider->subscription_expires_at && now()->greaterThan($provider->subscription_expires_at)) {
+            $provider->update([
+                'subscription_id' => null,
+                'subscription_expires_at' => null,
+            ]);
+
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Your subscription has expired. Please subscribe to a new plan.',
+                'data' => null,
+            ], 400);
+        }
+        /////////////////////////////////////////////////////////////////////
 
         // ✅ التأكد من أن المستخدم هو بروفايدر فقط
         if ($provider->role !== 'provider') {
@@ -201,6 +290,7 @@ class ProvSubscriptionController extends Controller
 
         // ✅ استرجاع مدة الاشتراك الجديد
         $duration = $newSubscription->translations->first()->duration ?? null;
+        // dd($duration);
 
         // ✅ حساب تاريخ انتهاء الاشتراك الجديد بناءً على مدته
         $expirationDate = now()->addDays(intval($duration))->format('Y-m-d H:i:s');
@@ -211,6 +301,14 @@ class ProvSubscriptionController extends Controller
             'subscription_expires_at' => $expirationDate, // تحديث تاريخ الانتهاء
         ]);
 
+        $admins = UsersAccount::where('role', 'superAdmin')->first();
+        $planTitle = $newSubscription->translations->first()->title ?? 'Unknown Plan';
+
+        $admins->notify(new GeneralNotification(
+            'upgrading Subscription',
+            "provider {$provider->username} has upgraded to {$planTitle}. Expiry at: {$expirationDate}."
+        ));
+
         return response()->json([
             'status' => 'success',
             'message' => 'Subscription upgraded successfully!',
@@ -218,7 +316,7 @@ class ProvSubscriptionController extends Controller
         ], 200);
     }
 
-
+    // Cancele subscription
     public function cancelSubscription(ProvSubscriptionRequest $request)
     {
         // ✅ جلب البروفايدر المسجل حاليًا

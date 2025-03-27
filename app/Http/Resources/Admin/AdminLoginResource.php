@@ -16,7 +16,6 @@ class AdminLoginResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'success' => true,
             'token_type' => 'Bearer',
             'access_token' => $this->token, // التوكن JWT
             'expires_in' => $this->expires_in, // مدة صلاحية التوكن

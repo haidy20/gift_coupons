@@ -12,7 +12,7 @@ class UserCartResource extends JsonResource
             return [
                 'provider_id' => $voucher->provider->id,
                 'provider_name' => $voucher->provider->username,
-                'provider_image' => optional($voucher->provider->media->first())->file_path,
+                // 'provider_image' => optional($voucher->provider->media->first())->file_path,
 
                 'latitude' => $voucher->provider->latitude,
                 'longitude' => $voucher->provider->longitude,

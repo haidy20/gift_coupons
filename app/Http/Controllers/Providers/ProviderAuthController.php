@@ -15,11 +15,12 @@ use App\Http\Requests\Providers\ProvSendVerificationCodeRequest;
 use App\Http\Requests\Providers\ProvVerifyCodeRequest;
 use App\Http\Requests\Providers\ProvResetPasswordRequest;
 use App\Http\Requests\Providers\ProvChangePassRequest;
+use App\Http\Requests\Providers\ProvUpdateProfileRequest;
 
-
-
-// Responses
+// Resources
 use App\Http\Resources\Providers\ProvLoginResource;
+use App\Http\Resources\Providers\ProvProfileResource;
+use App\Http\Resources\Providers\ProvUpdateProfileResource;
 
 class ProviderAuthController extends Controller
 {
@@ -89,7 +90,6 @@ class ProviderAuthController extends Controller
         ], 200);
     }
 
-
     public function resetPassword(ProvResetPasswordRequest $request)
     {
         // تحديث كلمة المرور في قاعدة البيانات
@@ -157,22 +157,96 @@ class ProviderAuthController extends Controller
         ], 200);
     }
 
+    public function profile()
+    {
+        // Get the authenticated user
+        $user = auth('api')->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'user not found.',
+                'data' => null,
+            ], 404); // أو يمكنك استخدام 403
+        }
+
+        // Ensure the user's account is active (verified)
+        if (!$user->is_active) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your account is not active. Please verify your account.',
+                'data' => null,
+            ], 403);
+        }
+
+        // Return the user's profile
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile successfully retrived',
+            'data' => new ProvProfileResource($user),
+        ], 200);
+    }
+
+    public function updateProfile(ProvUpdateProfileRequest $request)
+    {
+        $user = auth('api')->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found',
+                'data' => null,
+            ], 404);
+        }
+
+        if (!$user->is_active) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your account is not active. Please verify your account.',
+                'data' => null,
+            ], 403);
+        }
+
+        // استخدام الـ setter لتحديث الصورة
+        if ($request->hasFile('image')) {
+            $user->image = $request->file('image');
+        }
+
+        
+        // تحديث البيانات الأخرى
+        $user->update($request->validated());
+        // استرجاع البيانات مع الوسائط
+        $userWithMedia = UsersAccount::with('media', 'country')->find($user->id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile updated successfully!',
+            'data' => new ProvUpdateProfileResource($userWithMedia),
+        ], 200);
+    }
+
 
     public function logout()
     {
         // التحقق من المستخدم الحالي
-        $provider = auth('api')->user();
+        $user = auth('api')->user();
 
         // إذا لم يكن هناك مستخدم مسجل الدخول، يرجع رسالة خطأ
-        if (!$provider) {
+        if (!$user) {
             return response()->json([
-                'message' => 'You must be logged in to log out.'
-            ], 401);
+                'success' => false,
+                'message' => 'You must be logged in to log out.',
+                'data' => null
+            ], 404);
         }
 
         // تسجيل الخروج من النظام
         auth('api')->logout();
 
-        return response()->json(['message' => 'Successfully logged out']);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Successfully logged out',
+            'data' => null
+        ]);
     }
 }

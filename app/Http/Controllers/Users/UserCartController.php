@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 
 use App\Models\Cart;
 use App\Models\Voucher;
+
+
 // Responses
 use App\Http\Resources\Users\UserCartResource;
 use App\Http\Resources\Users\UserAddToCartResource;
@@ -18,22 +20,30 @@ class UserCartController extends Controller
 {
     public function addVoucherToCart($voucherId)
     {
-        $user = auth()->user();
+        $user = auth('api')->user();
         $cart = Cart::firstOrCreate(['user_id' => $user->id]);
 
-        $voucher = Voucher::with(['provider.media']) // ✅ جلب البروفايدر مع الصور
+        $voucher = Voucher::with(['provider.media']) // جلب البروفايدر مع الصور وجلب بيانات user_vouchers
             ->where('id', $voucherId)
             ->where('is_active', 1)
             ->first();
 
-            if (!$voucher) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Invalid or unavailable voucher.',
-                    'data' => null,
-                ], 404);
-            }
+        if (!$voucher) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid or unavailable voucher or expired.',
+                'data' => null,
+            ], 404);
+        }
 
+        // ✅ التحقق مما إذا كان الفاوتشر لم يبدأ بعد
+        if (strtotime($voucher->start_date) > time()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'This voucher cannot be purchased before ' . $voucher->start_date . '.',
+                'data' => null,
+            ], 400);
+        }
         // ✅ احضار كمية الفاوتشرات من نفس النوع
         $voucherQuantity = $cart->getVoucherQuantity($voucherId);
 
@@ -71,7 +81,7 @@ class UserCartController extends Controller
     //  Delete from cart
     public function removeVoucherFromCart($voucherId)
     {
-        $user = auth()->user();
+        $user = auth('api')->user();
         $cart = Cart::where('user_id', $user->id)->first();
 
         if (!$cart) {
@@ -133,7 +143,7 @@ class UserCartController extends Controller
     // Show cart 
     public function getCartDetails()
     {
-        $cart = auth()->user()->cart()->with(['vouchers.provider.media'])->get();
+        $cart = auth('api')->user()->cart()->with(['vouchers.provider.media'])->get();
 
         // if (!$cart) return null;
         if (!$cart) {

@@ -15,7 +15,8 @@ use App\Http\Controllers\Users\UserProvFavouriteController;
 use App\Http\Controllers\Users\UserVoucherFavouriteController;
 use App\Http\Controllers\Users\UserCartController;
 use App\Http\Controllers\Users\UserCheckoutController;
-
+use App\Http\Controllers\Users\UserFeedbackController;
+use App\Http\Controllers\Users\UserVoucherstatusController;
 
 
 
@@ -28,6 +29,14 @@ use App\Http\Controllers\Providers\ProvAboutUsController;
 use App\Http\Controllers\Providers\ProvFaqController;
 use App\Http\Controllers\Providers\ProvVoucherController;
 use App\Http\Controllers\Providers\ProvSubscriptionController;
+use App\Http\Controllers\Providers\ProvWalletController;
+use App\Http\Controllers\Providers\ProvScanController;
+use App\Http\Controllers\Providers\ProvHomeController;
+use App\Http\Controllers\Providers\ProviderWithdrawalRequestController;
+use App\Http\Controllers\Providers\ProvTransactionController;
+
+
+
 
 
 
@@ -41,9 +50,10 @@ use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminFaqController;
 use App\Http\Controllers\Admin\AdminVoucherController;
 use App\Http\Controllers\Admin\AdminSubscriptionController;
-
-
-
+use App\Http\Controllers\Admin\AdminNotificationController;
+use App\Http\Controllers\Admin\AdminFeedbackController;
+use App\Http\Controllers\Admin\AdminWithdrawalController;
+use App\Http\Controllers\Admin\AdminSystemReportController;
 
 
 
@@ -74,27 +84,63 @@ Route::prefix('admin')->group(function () {
     Route::get('/policies/{id}', [AdminPolicyTranslationController::class, 'show']);
     Route::get('/about-us/{id}', [AdminAboutUsTranslationController::class, 'show']);
 
-
-
-
+    // Show feedbacks
+    Route::get('/feedbacks', [UserFeedbackController::class, 'show']);
 
     Route::middleware('auth:api')->group(function () {
-
         //Create Static pages
         Route::post('create/terms', [AdminTermTranslationController::class, 'create']);
         Route::post('create/policies', [AdminPolicyTranslationController::class, 'create']);
         Route::post('create/about-us', [AdminAboutUsTranslationController::class, 'create']);
 
 
-
         Route::get('/vouchers', [AdminVoucherController::class, 'getVouchers']);
 
+
+        // Show and read contacts
         Route::get('contacts', [AdminContactController::class, 'show']);
+        Route::get('/read-contacts/{id}', [AdminContactController::class, 'markAsRead']);
+
         Route::post('/logout', [AdminAuthConroller::class, 'logout']);
 
-        // Admin create provider and user
+        // Admin create provider cruds
         Route::post('/create-provider', [AdminAuthConroller::class, 'createProvider']);
+        Route::post('/update-provider/{id}', [AdminAuthConroller::class, 'updateProvider']);
+        Route::get('/show-provider/{id}', [AdminAuthConroller::class, 'showProvider']);
+        Route::get('/showAll-providers', [AdminAuthConroller::class, 'showAllProviders']);
+        Route::delete('/delete-provider/{id}', [AdminAuthConroller::class, 'deleteProvider']);
+
+
+
+        // Admin create user cruds
         Route::post('/create-user', [AdminAuthConroller::class, 'createUser']);
+
+        
+        // Admin create admin cruds
+        Route::post('/create-admin', [AdminAuthConroller::class, 'createAdmin']);
+
+        // System report
+        Route::get('/allVouchers', [AdminSystemReportController::class, 'AdminGetAllVouchers']);
+        Route::get('/allVouchers-status', [AdminSystemReportController::class, 'AdminGetAllStatusVouchers']);
+        Route::get('/allRoles', [AdminSystemReportController::class, 'getAllUsersByRole']);
+        Route::get('/counts', [AdminSystemReportController::class, 'getCounts']);
+
+
+
+        // Approve and reject notifications of feedbacks
+        Route::post('/approve-feedback/{feedbackId}', [AdminFeedbackController::class, 'approveFeedback']);
+        Route::post('/reject-feedback/{feedbackId}', [AdminFeedbackController::class, 'rejectFeedback']);
+
+        // Approve and reject notifications of withdrawal requests
+        Route::post('/approve-withdrawal/{withdrawal_id}', [AdminWithdrawalController::class, 'approveWithdrawal']);
+        Route::post('/reject-withdrawal/{withdrawal_id}', [AdminWithdrawalController::class, 'rejectWithdrawal']);
+
+
+        // Admin send bulk notifications & read messages
+        Route::post('/send-bulk-notifications', [AdminNotificationController::class, 'sendBulkNotifications']);
+        Route::get('/notifications', [AdminNotificationController::class, 'getNotificationsAndMarkAsRead']);
+
+
 
         // Subscription Crud
         Route::prefix('subscriptions')->group(function () {
@@ -104,6 +150,7 @@ Route::prefix('admin')->group(function () {
             Route::post('/{subscription}', [AdminSubscriptionController::class, 'update']); // تحديث اشتراك
             Route::delete('/{subscription}', [AdminSubscriptionController::class, 'destroy']); // حذف اشتراك
         });
+
 
         // Country Codes Crud
         Route::prefix('countries')->group(function () {
@@ -122,6 +169,7 @@ Route::prefix('admin')->group(function () {
             Route::post('/{id}', [AdminCategoryController::class, 'update']);    // Update a category
             Route::delete('/{id}', [AdminCategoryController::class, 'destroy']); // Delete a category
         });
+
 
         // Group for Categories CRUD
         Route::prefix('faq')->group(function () {
@@ -146,8 +194,6 @@ Route::prefix('user')->group(function () {
     Route::delete('/delete', [UserAuthController::class, 'deleteAccount']);
 
 
-
-
     // static pages
     Route::get('/terms/{id}', [UserTermController::class, 'show']);
     Route::get('/policies/{id}', [UserPolicyController::class, 'show']);
@@ -156,6 +202,8 @@ Route::prefix('user')->group(function () {
 
     Route::post('contacts', [UserContactController::class, 'create']);
     Route::get('faq/', [UserFaqController::class, 'index']);
+    Route::get('/feedbacks', [UserFeedbackController::class, 'show']);
+
 
     Route::get('/home', [UserHomeController::class, 'home']);
     Route::get('/search', [UserHomeController::class, 'searchProvider']);
@@ -166,10 +214,6 @@ Route::prefix('user')->group(function () {
 
     Route::get('/categories', [UserHomeController::class, 'getAllCategories']); // ✅ جلب كل الفئات
     Route::get('/search-category', [UserHomeController::class, 'searchCategory']); // 🔍 البحث عن فئة
-
-
-
-
 
     // Two points of verfiy account to login 
     Route::post('/resend-code', [UserAuthController::class, 'resendResetCode']);
@@ -182,7 +226,23 @@ Route::prefix('user')->group(function () {
 
     Route::middleware('auth:api')->group(function () {
 
+        // Profile
+        Route::get('/show-profile', [UserAuthController::class, 'profile']);
+        Route::post('/update-profile', [UserAuthController::class, 'updateProfile']);
         Route::post('/change-password', [UserAuthController::class, 'changePassword']);
+
+        // create Feedback
+        Route::post('/create-feed', [UserFeedbackController::class, 'create']);
+        Route::post('/logout', [UserAuthController::class, 'logout']);
+
+
+        // Read Notication 
+        Route::get('/notifications', [AdminNotificationController::class, 'getNotificationsAndMarkAsRead']);
+
+        // User delete notifications
+        Route::delete('/notifications/{id}', [AdminNotificationController::class, 'destroy']);
+        Route::delete('/notifications', [AdminNotificationController::class, 'destroyAll']);
+
 
         // Provider favourite
         Route::post('/toggle-favorite', [UserProvFavouriteController::class, 'toggleFavoriteProvider']);
@@ -192,6 +252,12 @@ Route::prefix('user')->group(function () {
         Route::post('/toggle-fav', [UserVoucherFavouriteController::class, 'toggleFavoriteVoucher']);
         Route::get('/favorite-vouchers', [UserVoucherFavouriteController::class, 'getFavoriteVouchers']);
 
+        // Get status of voucher of all providers(active,used,expired)
+        Route::get('/get-status', [UserVoucherstatusController::class, 'getUserVouchers']);
+        Route::get('/voucher-details/{id}', [UserVoucherstatusController::class, 'getVoucherDetails']);
+
+
+
         // Add to cart 
         Route::prefix('cart')->group(function () {
             Route::post('/add/{voucherId}', [UserCartController::class, 'addVoucherToCart']);
@@ -200,14 +266,6 @@ Route::prefix('user')->group(function () {
         });
 
         Route::post('/checkout', [UserCheckoutController::class, 'checkoutOrder']);
-
-        Route::get('/voucher/validate/{voucher_id}', [UserCheckoutController::class, 'validateVoucher'])
-        ->name('voucher.validate');
-
-        
-        
-
-
     });
 });
 
@@ -222,23 +280,54 @@ Route::prefix('provider')->group(function () {
 
 
     Route::post('contacts', [ProvContactController::class, 'create']);
-    Route::get('faq/', [ProvFaqController::class, 'index']);          // Get all categories
-
+    Route::get('faq/', [ProvFaqController::class, 'index']);
 
     Route::post('login', [ProviderAuthController::class, 'login']);
-
-
 
     // Three points of forget password
     Route::post('/send-verification-code', [ProviderAuthController::class, 'sendVerificationCode']);
     Route::post('/verify-code', [ProviderAuthController::class, 'verifyCode']);
     Route::post('/reset-password', [ProviderAuthController::class, 'resetPassword']);
 
+    Route::get('/feedbacks', [UserFeedbackController::class, 'show']);
+
     Route::middleware('auth:api')->group(function () {
 
+        // Home
+        Route::get('/home', [ProvHomeController::class, 'home']);
+        Route::get('/{voucherId}/voucher-status', [ProvHomeController::class, 'getUsersByVoucherStatus']);
+
+
+        // Profile
+        Route::get('/show-profile', [ProviderAuthController::class, 'profile']);
+        Route::post('/update-profile', [ProviderAuthController::class, 'updateProfile']);
         Route::post('/change-password', [ProviderAuthController::class, 'changePassword']);
-        // Route::get('/search/{voucherId}', [ProvVoucherController::class, 'searchVoucherById']);
-        Route::post('/search', [ProvVoucherController::class, 'searchVouchers']);
+
+        // Scan code
+        Route::post('/scan-qr/{id}', [ProvScanController::class, 'scanQrCode']);
+        Route::get('/scanned-users', [ProvScanController::class, 'getScannedUsersByProvider']);
+
+
+
+        // Read Notication 
+        Route::get('/notifications', [AdminNotificationController::class, 'getNotificationsAndMarkAsRead']);
+
+        // Provider delete notifications
+        Route::delete('/notifications/{id}', [AdminNotificationController::class, 'destroy']);
+        Route::delete('/notifications', [AdminNotificationController::class, 'destroyAll']);
+
+
+        // Wallet ,Transactions, withdrawal
+        Route::get('/show-wallet', [ProvWalletController::class, 'getWallet']);
+        Route::post('/request-withdraw', [ProviderWithdrawalRequestController::class, 'withdraw']);
+
+        Route::get('/show-transactions', [ProvTransactionController::class, 'getTransactions']);
+
+
+
+
+
+        Route::post('/logout', [ProviderAuthController::class, 'logout']);
 
         // Subscription of provider
         Route::get('/subscriptions', [ProvSubscriptionController::class, 'showAvailableSubscriptions']);
@@ -249,13 +338,7 @@ Route::prefix('provider')->group(function () {
         Route::post('/cancel-sub', [ProvSubscriptionController::class, 'cancelSubscription']);
         Route::post('/upgrade-sub', [ProvSubscriptionController::class, 'upgradeSubscription']);
 
-
-
-
-
-
-
-
+        // Voucher Cruds
         Route::prefix('vouchers')->group(function () {
             Route::post('/', [ProvVoucherController::class, 'createVoucher']);
             Route::post('/{voucherId}', [ProvVoucherController::class, 'updateVoucher']);
@@ -265,5 +348,8 @@ Route::prefix('provider')->group(function () {
             Route::post('/toggle/{voucherId}', [ProvVoucherController::class, 'toggleVoucherStatus']); // تفعيل/إلغاء تفعيل القسيمة
 
         });
+
+        Route::get('/search-vouchers', [ProvVoucherController::class, 'getVoucherByNameOrRandomNum']);
+        Route::delete('/search-history/delete', [ProvVoucherController::class, 'deleteSearchHistory']);
     });
 });

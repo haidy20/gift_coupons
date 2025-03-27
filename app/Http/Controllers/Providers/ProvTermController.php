@@ -21,13 +21,22 @@ class ProvTermController extends Controller
         $term = Term::with('translations')->find($id);
 
         if (!$term) {
-            return response()->json(['message' => 'Term not found'], 404);
+            return response()->json([
+                'status' => "error",
+                'message' => 'Term not found',
+                'data' => null
+
+            ], 404);
         }
 
         $translation = $term->translation($locale);
 
         if (!$translation) {
-            return response()->json(['message' => 'Translation not found'], 404);
+            return response()->json([
+                'status' => "error",
+                'message' => 'Translation not found',
+                'data' => null
+            ], 404);
         }
         return response()->json([
             'success' => true,

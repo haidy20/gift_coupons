@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,10 +18,10 @@ class QrCode extends Model implements JWTSubject
         'updated_at', // يتم إدارته تلقائيًا
     ];
 
-    public function getQrCodeUrlAttribute()
-{
-    return $this->qr_code_path ? asset('storage/' . $this->qr_code_path) : null;
-}
+    // public function getQrCodeUrlAttribute()
+    // {
+    //     return $this->qr_code_path ? asset('storage/' . $this->qr_code_path) : null;
+    // }
 
     // تنفيذ واجهة JWTSubject
     public function getJWTIdentifier()
@@ -35,6 +36,20 @@ class QrCode extends Model implements JWTSubject
 
     public function voucher()
     {
-        return $this->belongsTo(Voucher::class,'voucher_id');
+        return $this->belongsTo(Voucher::class, 'voucher_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(UsersAccount::class, 'user_id');
+    }
+    public function provider()
+    {
+        return $this->belongsTo(UsersAccount::class, 'provider_id');
+    }
+    
+    public function getFilePathAttribute($value)
+    {
+        return $value ? url('storage/' . $value) : null ;
     }
 }

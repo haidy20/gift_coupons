@@ -23,7 +23,7 @@ class AdminAccountSeeder extends Seeder
     public function run()
     {
         // تحقق إذا كان هناك Admin موجود مسبقًا
-        $existingAdmin = UsersAccount::where('role', 'admin')->first();
+        $existingAdmin = UsersAccount::where('role', 'superAdmin')->first();
 
         if (!$existingAdmin) {
             // إنشاء حساب Admin
@@ -31,8 +31,8 @@ class AdminAccountSeeder extends Seeder
                 'username' => 'AdminUser',
                 'email' => 'adminuser@example.com',
                 'password' => 'admin123', // التشفير الصحيح
-                'phone' => '0123456789',
-                'role' => 'admin',
+                'phone' => '01234567891',
+                'role' => 'superAdmin',
                 'countries_id' => 3,
             ]);
             // إنشاء JWT Token لهذا الـ Admin

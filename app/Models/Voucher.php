@@ -24,8 +24,8 @@ class Voucher extends Model implements JWTSubject
     // علاقة القسيمة بكود QR واحد فقط
     public function qrCode()
     {
-        return $this->hasOne(QrCode::class,'voucher_id');
-    } 
+        return $this->hasOne(QrCode::class, 'voucher_id');
+    }
 
     protected static function boot()
     {
@@ -44,7 +44,7 @@ class Voucher extends Model implements JWTSubject
     public function users()
     {
         return $this->belongsToMany(UsersAccount::class, 'user_vouchers', 'voucher_id', 'user_id')
-            ->withPivot('purchase_date', 'expiry_date', 'used_date')
+            ->withPivot('purchase_date', 'expiry_date', 'used_date','status')
             ->withTimestamps();
     }
 
@@ -52,11 +52,11 @@ class Voucher extends Model implements JWTSubject
     // Many to many between users and vouchers in (voucher_favorites) 
     public function favoritedByUsers()
     {
-        return $this->belongsToMany(UsersAccount::class, 'voucher_favorites','voucher_id','user_id')
-        ->withTimestamps();
+        return $this->belongsToMany(UsersAccount::class, 'voucher_favorites', 'voucher_id', 'user_id')
+            ->withTimestamps();
     }
 
-    
+
 
     // Implement JWTSubject methods
     public function getJWTIdentifier()
@@ -80,6 +80,9 @@ class Voucher extends Model implements JWTSubject
     {
         return $this->hasMany(OrderDetail::class, 'voucher_id');
     }
-    
-    
+
+    public function scannedUsers()
+    {
+        return $this->hasMany(ScannedUser::class,'voucher_id');
+    }
 }
