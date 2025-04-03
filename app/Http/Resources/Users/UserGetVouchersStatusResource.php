@@ -22,6 +22,7 @@ class UserGetVouchersStatusResource extends JsonResource
 
         return [
             'provider_name' => $voucher->provider->username ?? 'Unknown',
+            'image' => $voucher->provider->media->file_path ?? 'Unknown',
             'latitude' => $voucher->provider->latitude ?? null,
             'longitude' => $voucher->provider->longitude ?? null,
             'location' => $voucher->provider->location ?? null,

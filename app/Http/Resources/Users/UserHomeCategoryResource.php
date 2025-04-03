@@ -16,7 +16,7 @@ class UserHomeCategoryResource extends JsonResource
                 return [
                     'provider_id'    => $provider->id,
                     'provider_name'  => $provider->username,
-                    // 'image'          => $provider->media->file_path ?? null,
+                    'image'          => $provider->media->file_path ?? null,
                     'latitude'       => $provider->latitude,
                     'longitude'      => $provider->longitude,
                     'location'       => $provider->location,

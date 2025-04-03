@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
         // $this->call(RolesAndPermissionsSeeder::class);
 
         $this->call([
-            RolesAndPermissionsSeeder::class,
+            PermissionSeeder::class,
             AdminAccountSeeder::class, // تأكدي إنكِ محتاجة هذا الـ Seeder
         ]);
 

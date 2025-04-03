@@ -89,11 +89,13 @@ Route::prefix('admin')->group(function () {
 
     Route::middleware('auth:api')->group(function () {
         //Create Static pages
-        Route::post('create/terms', [AdminTermTranslationController::class, 'create']);
+        Route::post('create/terms', [AdminTermTranslationController::class, 'create'])
+        ->name('admin.createTerms')
+        ->middleware('custom.permission:admin.createTerms');
+
         Route::post('create/policies', [AdminPolicyTranslationController::class, 'create']);
-        Route::post('create/about-us', [AdminAboutUsTranslationController::class, 'create']);
-
-
+        Route::post('create/about-us', [AdminAboutUsTranslationController::class, 'create'])->middleware('custom.permission:admin.createAboutUs');
+        
         Route::get('/vouchers', [AdminVoucherController::class, 'getVouchers']);
 
 
@@ -114,10 +116,20 @@ Route::prefix('admin')->group(function () {
 
         // Admin create user cruds
         Route::post('/create-user', [AdminAuthConroller::class, 'createUser']);
+        Route::post('/update-user/{id}', [AdminAuthConroller::class, 'updateUser']);
+        Route::get('/show-user/{id}', [AdminAuthConroller::class, 'showUser']);
+        Route::get('/showAll-users', [AdminAuthConroller::class, 'showAllUsers']);
+        Route::delete('/delete-user/{id}', [AdminAuthConroller::class, 'deleteUser']);
+
 
         
         // Admin create admin cruds
         Route::post('/create-admin', [AdminAuthConroller::class, 'createAdmin']);
+        Route::post('/update-admin/{id}', [AdminAuthConroller::class, 'updateAdmin']);
+        Route::get('/show-admin/{id}', [AdminAuthConroller::class, 'showAdmin']);
+        Route::get('/showAll-admins', [AdminAuthConroller::class, 'showAllAdmins']);
+        Route::delete('/delete-admin/{id}', [AdminAuthConroller::class, 'deleteAdmin']);
+
 
         // System report
         Route::get('/allVouchers', [AdminSystemReportController::class, 'AdminGetAllVouchers']);
@@ -254,7 +266,7 @@ Route::prefix('user')->group(function () {
 
         // Get status of voucher of all providers(active,used,expired)
         Route::get('/get-status', [UserVoucherstatusController::class, 'getUserVouchers']);
-        Route::get('/voucher-details/{id}', [UserVoucherstatusController::class, 'getVoucherDetails']);
+        Route::get('/voucher-details/{purchaseId}', [UserVoucherstatusController::class, 'getUserVoucherById']);
 
 
 

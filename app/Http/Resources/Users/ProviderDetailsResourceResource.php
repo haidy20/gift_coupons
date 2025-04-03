@@ -12,7 +12,7 @@ class ProviderDetailsResourceResource extends JsonResource
         return [
             'id'            => $this->id,
             'username'      => $this->username,
-            // 'image'         => $this->provider->media->file_path ?? null,
+            'image'         => $this->media->file_path ?? null,
             'latitude'      => $this->latitude,
             'longitude'     => $this->longitude,
             'location'      => $this->location,

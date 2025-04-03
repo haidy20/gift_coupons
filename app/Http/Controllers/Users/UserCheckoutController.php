@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Checkout;
 use App\Models\OrderDetail;
 use App\Models\Cart;
+use Carbon\Carbon;
 use App\Models\QrCode as QrCodeModel;
 use App\Notifications\GeneralNotification;
 use App\Models\UsersAccount;
@@ -14,7 +15,13 @@ use Illuminate\Support\Facades\DB;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use App\Jobs\NotifyUserVoucherExpiry; // ✅ أضف هذا السطر
 
+
+
+// Responses
+use App\Http\Resources\Users\UserCheckoutResource;
+use App\Http\Resources\Users\UserAddToCartResource;
 
 
 class UserCheckoutController extends Controller
@@ -65,6 +72,11 @@ class UserCheckoutController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+            // تحديد وقت الإشعار قبل انتهاء الصلاحية دقيقة مثلاً
+            $notifyAt = now()->addMinutes(1);
+            NotifyUserVoucherExpiry::dispatch($user, $voucher, $expiryDate)->delay($notifyAt);
+            
+            // Log::info('Expiry Date:', ['expiry_date' => $expiryDate]);
 
             $transactionAmount = $voucher->amount * ($voucher->pivot->quantity ?? 1);
 
@@ -111,6 +123,12 @@ class UserCheckoutController extends Controller
             'total_quantity' => $totalQuantity,
             'total_for_all' => $totalVouchers,
             'order_details' => $orderDetails,
+        ], 200);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Order placed successfully with $totalQuantity items totaling $$totalVouchers.",
+            'data' => new UserCheckoutResource($checkout)
         ], 200);
     }
 

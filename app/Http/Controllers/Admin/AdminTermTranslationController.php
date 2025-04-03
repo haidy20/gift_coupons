@@ -24,8 +24,8 @@ class AdminTermTranslationController extends Controller
     {
 
         $admin = auth('api')->user();
-        if ($admin->role !== 'admin') {
-            return response()->json(['status' => 'error', 'message' => 'Only admins can create terms.', 'data' => null], 403);
+        if ($admin->role !== 'superAdmin') {
+            return response()->json(['status' => 'error', 'message' => 'Only superAdmin can create terms.', 'data' => null], 403);
         }
         // التحقق من البيانات باستخدام FormRequest
         $validatedData = $request->validated();

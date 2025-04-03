@@ -21,8 +21,8 @@ class AdminPolicyTranslationController extends Controller
     public function create(AdminPolicyTransRequest $request)
     {
         $admin = auth('api')->user();
-        if ($admin->role !== 'admin') {
-            return response()->json(['status' => 'error', 'message' => 'Only admins can create policy.', 'data' => null], 403);
+        if ($admin->role !== 'superAdmin') {
+            return response()->json(['status' => 'error', 'message' => 'Only superAdmins can create policy.', 'data' => null], 403);
         }
         // التحقق من البيانات باستخدام FormRequest
         $validatedData = $request->validated();

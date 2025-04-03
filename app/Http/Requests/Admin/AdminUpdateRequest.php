@@ -18,14 +18,15 @@ class AdminUpdateRequest extends FormRequest
     {
         return [
             'username' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|nullable|email|unique:users_accounts,email,' . $this->route('id'),
+            'email' => 'nullable|email|unique:users_accounts,email,' . $this->route('id'),
             'password' => 'sometimes|required|string|min:8|confirmed',
-            'phone' => 'sometimes|required|unique:users_accounts,phone,' . $this->route('id'),
+            'phone' => 'nullable|unique:users_accounts,phone,' . $this->route('id'),
             'countries_id' => 'sometimes|nullable|exists:countries,id',
             'latitude' => 'sometimes|nullable|numeric',
             'longitude' => 'sometimes|nullable|numeric',
             'location' => 'sometimes|nullable|string|max:255',
             'category_id' => 'sometimes|nullable|exists:categories,id',
+            'role_id' => 'nullable|exists:roles,id',
             'image' => 'sometimes|image|mimes:jpg,jpeg,png,gif|max:2048', // ✅ تأكد من وجود هذا السطر
 
         ];

@@ -22,10 +22,11 @@ class AdminCrudsUsersResource extends JsonResource
             'phone' => $this->phone,
             'role' => $this->role,
             'is_active' => (bool)$this->is_active,
-            'country' => $this->country->country_code,
+            'country' => $this->country->country_name,
             'latitude' => $this->latitude,  // ✅ إضافة الإحداثيات
             'longitude' => $this->longitude, // ✅ إضافة الإحداثيات
             'location' => $this->location, // ✅ إضافة العنوان
+            'role_id' => $this->role_id, // ✅ إضافة فئة المستخدم
             'category_id' => $this->category_id, // ✅ إضافة فئة المستخدم
         ];
     }

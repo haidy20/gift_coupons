@@ -14,7 +14,7 @@ use Illuminate\Auth\Authenticatable;
 
 class UsersAccount extends Model implements JWTSubject, AuthenticatableContract
 {
-    use HasFactory, HasApiTokens, Authenticatable, Notifiable ;
+    use HasFactory, HasApiTokens, Authenticatable, Notifiable;
 
 
     protected $table = 'users_accounts';
@@ -99,17 +99,17 @@ class UsersAccount extends Model implements JWTSubject, AuthenticatableContract
             // **حذف الصورة القديمة إن وجدت**
             if ($this->media) {
                 $oldImagePath = public_path("storage/" . $this->media->file_path);
-    
+
                 if (file_exists($oldImagePath)) {
                     unlink($oldImagePath); // 🔥 حذف الصورة من السيرفر
                 }
-    
+
                 $this->media()->delete(); // 🗄️ حذف السجل القديم من قاعدة البيانات
             }
-    
+
             // **رفع الصورة الجديدة**
             $filePath = $file->store('profiles', 'public');
-    
+
             // **إنشاء سجل جديد في جدول media**
             $this->media()->create([
                 'file_path' => $filePath,
@@ -118,7 +118,7 @@ class UsersAccount extends Model implements JWTSubject, AuthenticatableContract
             ]);
         }
     }
-    
+
 
 
 
@@ -244,5 +244,69 @@ class UsersAccount extends Model implements JWTSubject, AuthenticatableContract
     public function withdrawal()
     {
         return $this->hasMany(WithdrawalRequest::class, 'provider_id');
+    }
+    /////////////////////////////////////////////Roles & Permissions//////////////////////////////////////////////////////////
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_id');
+    }
+
+    public function permissions()
+    {
+        // dd($this->role); // إضافة هذا السطر
+
+        return $this->role ? $this->role->permissions() : collect([]);
+    }
+
+
+    public function back_route_name_permissions()
+    {
+        if ($this->role) {
+            return $this->role->permissions()->pluck('back_route_name')->toArray();
+        }
+        return [];
+    }
+
+    public function hasRole($role)
+    {
+        return $this->role ? @$this->role->name == $role : false;
+    }
+
+    public function hasPermission($permission)
+    {
+        if (($this->back_route_name_permissions() != null && ! empty($this->back_route_name_permissions()))) {
+
+            if (in_array($permission, $this->back_route_name_permissions())) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+
+    public function hasPermissions($route, $method = null)
+    {
+        if ($this->role == 'superAdmin') {
+            return true;
+        }
+        if (is_null($method)) {
+            if ($this->role->permissions->contains('route_name', $route . ".index")) {
+                return true;
+            } elseif ($this->role->permissions->contains('route_name', $route . ".store")) {
+                return true;
+            } elseif ($this->role->permissions->contains('route_name', $route . ".update")) {
+                return true;
+            } elseif ($this->role->permissions->contains('route_name', $route . ".destroy")) {
+                return true;
+            } elseif ($this->role->permissions->contains('route_name', $route . ".show")) {
+                return true;
+            }
+        } else {
+            return $this->role->permissions->contains('route_name', $route . "." . $method);
+        }
+        return false;
     }
 }

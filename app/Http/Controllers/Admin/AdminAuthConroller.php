@@ -17,8 +17,6 @@ use App\Http\Requests\Admin\AdminUpdateRequest;
 
 // Responses
 use App\Http\Resources\Admin\AdminLoginResource;
-use App\Http\Resources\Admin\MakeRegisterResource;
-use App\Http\Resources\Admin\AdminCreateAdminResource;
 use App\Http\Resources\Admin\AdminMakeUsersResource;
 use App\Http\Resources\Admin\AdminCrudsUsersResource;
 
@@ -252,10 +250,120 @@ class AdminAuthConroller extends Controller
         ));
 
         $token = JWTAuth::fromUser($user); // Use fromUser method to generate token
+        $expiresIn = auth('api')->factory()->getTTL() * 60; // مدة انتهاء التوكن
 
-        return response()->json(
-            new MakeRegisterResource($user, $token, auth('api')->factory()->getTTL() * 60)
-        );
+        return response()->json([
+            'status' => true,
+            'message' => 'User created successfully',
+            'data' => new AdminMakeUsersResource($user, $token, $expiresIn),
+        ], 200);
+    }
+
+    public function updateUser(AdminUpdateRequest $request, $id)
+    {
+        // تأكد أن المستخدم الحالي هو أدمن
+        if (auth()->user()->role !== 'superAdmin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized: Only superAdmin can update providers.',
+            ], 403);
+        }
+        $user = UsersAccount::where('role', 'client')->find($id);
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'user not found.',
+                'data' => null
+            ], 404);
+        }
+
+        // تحديث الصورة مباشرة باستخدام setter
+        if ($request->hasFile('image')) {
+            $user->image = $request->file('image'); // سيستدعي setImageAttribute تلقائيًا4
+            // dd($user->image);
+        }
+
+        // تحديث باقي بيانات المستخدم
+        $user->update($request->validated());
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'user updated successfully',
+            'data' => new AdminCrudsUsersResource($user),
+        ]);
+    }
+
+    public function showUser($id)
+    {
+        // تأكد أن المستخدم الحالي هو أدمن
+        if (auth()->user()->role !== 'superAdmin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized: Only superAdmin can show provider.',
+                'data' => null
+            ], 403);
+        }
+        $user = UsersAccount::where('role', 'client')->find($id);
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'user not found.',
+                'data' => null
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'user retrived successfully',
+            'data' => new AdminCrudsUsersResource($user),
+        ]);
+    }
+
+    public function showAllUsers()
+    {
+        // تأكد أن المستخدم الحالي هو أدمن
+        if (auth()->user()->role !== 'superAdmin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized: Only superAdmin can show providers.',
+            ], 403);
+        }
+        $users = UsersAccount::where('role', 'client')->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Admins retrived successfully',
+            'data' =>  AdminCrudsUsersResource::collection($users),
+        ]);
+    }
+
+    public function deleteUser($id)
+    {
+        // تأكد أن المستخدم الحالي هو أدمن
+        if (auth()->user()->role !== 'superAdmin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized: Only superAdmin can update providers.',
+            ], 403);
+        }
+        $user = UsersAccount::where('role', 'client')->find($id);
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'user not found.',
+                'data' => null
+            ], 404);
+        }
+        $user->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'user deleted successfully',
+            'data' => null
+        ]);
     }
 
     ////////////////////////////// Admin create admin cruds/////////////////////////////////////////
@@ -278,10 +386,121 @@ class AdminAuthConroller extends Controller
             ]
         ));
 
+        $token = JWTAuth::fromUser($admin); // Use fromUser method to generate token
+        $expiresIn = auth('api')->factory()->getTTL() * 60; // مدة انتهاء التوكن
+
         return response()->json([
             'status' => true,
             'message' => 'Admin created successfully',
-            'data' => new AdminCreateAdminResource($admin),
+            'data' => new AdminMakeUsersResource($admin, $token, $expiresIn),
         ], 200);
+    }
+
+
+    public function updateAdmin(AdminUpdateRequest $request, $id)
+    {
+        // تأكد أن المستخدم الحالي هو أدمن
+        if (auth()->user()->role !== 'superAdmin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized: Only superAdmin can update providers.',
+            ], 403);
+        }
+        $admin = UsersAccount::where('role', 'admin')->find($id);
+
+        if (!$admin) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'admin not found.',
+                'data' => null
+            ], 404);
+        }
+
+        // تحديث الصورة مباشرة باستخدام setter
+        if ($request->hasFile('image')) {
+            $admin->image = $request->file('image'); // سيستدعي setImageAttribute تلقائيًا4
+            // dd($provider->image);
+        }
+
+        // تحديث باقي بيانات المستخدم
+        $admin->update($request->validated());
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'admin updated successfully',
+            'data' => new AdminCrudsUsersResource($admin),
+        ]);
+    }
+
+    public function showAdmin($id)
+    {
+        // تأكد أن المستخدم الحالي هو أدمن
+        if (auth()->user()->role !== 'superAdmin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized: Only superAdmin can show provider.',
+                'data' => null
+            ], 403);
+        }
+        $admin = UsersAccount::where('role', 'admin')->find($id);
+
+        if (!$admin) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'admin not found.',
+                'data' => null
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'admin retrived successfully',
+            'data' => new AdminCrudsUsersResource($admin),
+        ]);
+    }
+
+    public function showAllAdmins()
+    {
+        // تأكد أن المستخدم الحالي هو أدمن
+        if (auth()->user()->role !== 'superAdmin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized: Only superAdmin can show providers.',
+            ], 403);
+        }
+        $admins = UsersAccount::where('role', 'admin')->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Admins retrived successfully',
+            'data' =>  AdminCrudsUsersResource::collection($admins),
+        ]);
+    }
+
+    public function deleteAdmin($id)
+    {
+        // تأكد أن المستخدم الحالي هو أدمن
+        if (auth()->user()->role !== 'superAdmin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized: Only superAdmin can update providers.',
+            ], 403);
+        }
+        $admin = UsersAccount::where('role', 'admin')->find($id);
+
+        if (!$admin) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'admin not found.',
+                'data' => null
+            ], 404);
+        }
+        $admin->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'admin deleted successfully',
+            'data' => null
+        ]);
     }
 }

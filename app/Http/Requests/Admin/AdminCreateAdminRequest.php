@@ -23,10 +23,18 @@ class AdminCreateAdminRequest extends FormRequest
     {
         return [
             'username' => 'required|string|max:255',
-            'email' => 'required|email|unique:users_accounts,email',
-            'password' => 'required|string|min:6',
-            'phone' => 'required|string|max:20',
-            'countries_id' => 'required|integer',
+            'email' => [
+                'nullable',
+                'unique:users_accounts,email',
+            ],
+            'password' => 'required|string|min:8|confirmed',
+            'phone' => 'required|unique:users_accounts,phone',
+            'countries_id' => 'required|exists:countries,id',
+            'role_id' => 'nullable|exists:roles,id',
+            'latitude' => 'nullable|numeric',  // إضافة القواعد الخاصة بالإحداثيات
+            'longitude' => 'nullable|numeric',
+            'location' => 'nullable|string|max:255',
+            'category_id' => 'nullable|exists:categories,id', // يجب أن يكون معرف الفئة موجودًا في جدول الفئات
         ];
     }
 }
