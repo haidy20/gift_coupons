@@ -22,14 +22,18 @@ class AdminAboutUsTranslationController extends Controller
     public function create(AdminAboutUsTransRequest $request)
     {
         $admin = auth('api')->user();
-        if ($admin->role !== 'admin') {
-            return response()->json(['status' => 'error', 'message' => 'Only admins can create about us', 'data' => null], 403);
+        if ($admin->role !== 'superAdmin') {
+            return response()->json([
+                'status' => 'error',
+                'message' => trans('messages.unauthorized_user'),
+                'data' => null
+            ], 403);
         }
         // التحقق من البيانات باستخدام FormRequest
         $validatedData = $request->validated();
         // إنشاء المصطلح فقط دون تحديث
         $about = AboutUs::create();
-    
+
         // إدخال الترجمات 
         foreach (['en', 'ar'] as $locale) {
             AboutUsTranslation::create([
@@ -39,17 +43,17 @@ class AdminAboutUsTranslationController extends Controller
                 'description' => $validatedData["description_{$locale}"],
             ]);
         }
-    
+
         return response()->json([
             'success' => true,
-            'message' => 'about created successfully',
+            'message' => trans('messages.about_created_successfully'),
             'data' => new AdminAboutUsTransResource($about),
         ], 200);
     }
-    
-    
 
-    public function show($id,AdminShowAboutUsRequest $request)
+
+
+    public function show($id, AdminShowAboutUsRequest $request)
     {
         $locale = $request->header('Accept-Language', 'en'); // الافتراضي English
         $about = AboutUs::with('translations')->find($id);
@@ -57,7 +61,7 @@ class AdminAboutUsTranslationController extends Controller
         if (!$about) {
             return response()->json([
                 'status' => false,
-                'message' => 'About not found',
+                'message' => trans('messages.about_not_found'),
                 'data' => null
             ], 404);
         }
@@ -67,13 +71,13 @@ class AdminAboutUsTranslationController extends Controller
         if (!$translation) {
             return response()->json([
                 'status' => false,
-                'message' => 'Translation not found',
+                'message' => trans('messages.translation_not_found'),
                 'data' => null
             ], 404);
         }
         return response()->json([
             'success' => true,
-            'message' => 'about retrived successfully',
+            'message' => trans('messages.about_retrieved_successfully'),
             'data' => new AdminShowAboutUsResource($translation),
         ], 200);
     }

@@ -21,10 +21,10 @@ class AdminFaqController extends Controller
     public function index()
     {
         $admin = auth('api')->user();
-        if ($admin->role !== 'admin') {
+        if ($admin->role !== 'superAdmin') {
             return response()->json([
                 'status' => false,
-                'message' => 'Only admins can create FAQs.',
+                'message' => trans('messages.unauthorized_user'),
                 'data' => null,
             ], 403);
         }
@@ -32,7 +32,7 @@ class AdminFaqController extends Controller
         $faqs = Faq::with('translations')->get();
         return response()->json([
             'status' => true,
-            'message' => 'FAQs retrieved successfully',
+            'message' => trans('messages.faqs_retrieved_successfully'),
             'data' => AdminFaqResource::collection($faqs),
         ], 200);
     }
@@ -43,10 +43,10 @@ class AdminFaqController extends Controller
     public function create(AdminFaqRequest $request)
     {
         $admin = auth('api')->user();
-        if ($admin->role !== 'admin') {
+        if ($admin->role !== 'superAdmin') {
             return response()->json([
                 'status' => false,
-                'message' => 'Only admins can create FAQs.',
+                'message' => trans('messages.unauthorized_user'),
                 'data' => null,
             ], 403);
         }
@@ -64,7 +64,7 @@ class AdminFaqController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'FAQ created successfully',
+            'message' => trans('messages.faq_created_successfully'),
             'data' => new AdminFaqResource($faq),
         ], 201);
     }
@@ -73,10 +73,10 @@ class AdminFaqController extends Controller
     public function show($id, AdminShowFaqRequest $request)
     {
         $admin = auth('api')->user();
-        if ($admin->role !== 'admin') {
+        if ($admin->role !== 'superAdmin') {
             return response()->json([
                 'status' => false,
-                'message' => 'Only admins can view FAQs.',
+                'message' => trans('messages.unauthorized_user'),
                 'data' => null,
             ], 403);
         }
@@ -87,14 +87,14 @@ class AdminFaqController extends Controller
         if (!$faq) {
             return response()->json([
                 'status' => false,
-                'message' => 'FAQ not found',
+                'message' => trans('messages.faq_not_found'),
                 'data' => null,
             ], 404);
         }
     
         return response()->json([
             'status' => true,
-            'message' => 'FAQ retrieved successfully',
+            'message' => trans('messages.faq_retrieved_successfully'),
             'data' => new AdminShowFaqResource($faq, $locale), // تمرير اللغة
         ], 200);
     }
@@ -105,10 +105,10 @@ class AdminFaqController extends Controller
     public function update(AdminFaqRequest $request, $id)
     {
         $admin = auth('api')->user();
-        if ($admin->role !== 'admin') {
+        if ($admin->role !== 'superAdmin') {
             return response()->json([
                 'status' => false,
-                'message' => 'Only admins can update FAQs.',
+                'message' => trans('messages.unauthorized_user'),
                 'data' => null,
             ], 403);
         }
@@ -128,7 +128,7 @@ class AdminFaqController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'FAQ updated successfully',
+            'message' => trans('messages.faq_updated_successfully'),
             'data' => new AdminFaqResource($faq),
         ], 200);
     }
@@ -139,10 +139,10 @@ class AdminFaqController extends Controller
     public function destroy($id)
     {
         $admin = auth('api')->user();
-        if ($admin->role !== 'admin') {
+        if ($admin->role !== 'superAdmin') {
             return response()->json([
                 'status' => false,
-                'message' => 'Only admins can delete FAQs.',
+                'message' => trans('messages.unauthorized_user'),
                 'data' => null,
             ], 403);
         }
@@ -152,7 +152,7 @@ class AdminFaqController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'FAQ deleted successfully',
+            'message' => trans('messages.faq_deleted_successfully'),
             'data' => null,
         ], 200);
     }

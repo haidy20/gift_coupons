@@ -22,8 +22,6 @@ use App\Http\Resources\Admin\AdminCrudsUsersResource;
 
 
 
-
-
 class AdminAuthConroller extends Controller
 {
     public function login(AdminLoginRequest $request)
@@ -34,12 +32,10 @@ class AdminAuthConroller extends Controller
 
         $credentials = $request->only('email', 'password');
         // محاولة تسجيل الدخول باستخدام attempt
-        if (!$token = JWTAuth::attempt($credentials)) {
-            // dd($credentials, Hash::make($request->password), $user->password, Hash::check($request->password, $user->password));
-
+        if (!$token = JWTAuth::attempt($credentials)) { 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Invalid credentials',
+                'message' => trans('messages.invalid_credentials'),
                 'data' => null
             ], 401);
         }
@@ -48,8 +44,8 @@ class AdminAuthConroller extends Controller
         // if ($user->role !== 'superAdmin') {
         //     return response()->json([
         //         'status' => 'error',
-        //         'message' => 'Access denied. Only superAdmin can log in.',
-        //         'data' => null
+        // 'message' => trans('messages.unauthorized_user'),
+                // 'data' => null
         //     ], 403);
         // }
         // توليد التوكن باستخدام JWT
@@ -58,8 +54,8 @@ class AdminAuthConroller extends Controller
         $user->save();
 
         return response()->json([
-            'success' => true,
-            'message' =>  trans('message.sucess'),
+            'status' => true,
+            'message' =>  trans('messages.login_successfully'),
             'data' => new AdminLoginResource((object)[
                 'token' => $token,
                 'expires_in' => auth('api')->factory()->getTTL() * 60,
@@ -76,7 +72,7 @@ class AdminAuthConroller extends Controller
         if (!$user) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'You must be logged in to log out.',
+                'message' => trans('messages.must_login'),
                 'data' => null
             ], 401);
         }
@@ -86,7 +82,7 @@ class AdminAuthConroller extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => trans('sucess'),
+            'message' => trans('messages.logout_successfully'),
             'data' => null
         ], 200);
     }
@@ -97,8 +93,9 @@ class AdminAuthConroller extends Controller
         // تأكد أن المستخدم الحالي هو أدمن
         if (auth()->user()->role !== 'superAdmin') {
             return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized: Only superAdmin can create providers.',
+                'status' => false,
+                'message' => trans('messages.unauthorized_user'),
+                'data'=>null
             ], 403);
         }
 
@@ -116,7 +113,7 @@ class AdminAuthConroller extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'Provider created successfully',
+            'message' => trans('messages.provider_created_successfully'),
             'data' => new AdminMakeUsersResource($provider, $token, $expiresIn),
         ]);
     }
@@ -126,8 +123,8 @@ class AdminAuthConroller extends Controller
         // تأكد أن المستخدم الحالي هو أدمن
         if (auth()->user()->role !== 'superAdmin') {
             return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized: Only superAdmin can show provider.',
+                'status' => false,
+                'message' => trans('messages.unauthorized_user'),
                 'data' => null
             ], 403);
         }
@@ -136,14 +133,14 @@ class AdminAuthConroller extends Controller
         if (!$provider) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Provider not found.',
+                'message' => trans('messages.provider_not_found'),
                 'data' => null
             ], 404);
         }
 
         return response()->json([
             'status' => true,
-            'message' => 'Provider retrived successfully',
+            'message' => trans('messages.provider_retrieved_successfully'),
             'data' => new AdminCrudsUsersResource($provider),
         ]);
     }
@@ -153,15 +150,17 @@ class AdminAuthConroller extends Controller
         // تأكد أن المستخدم الحالي هو أدمن
         if (auth()->user()->role !== 'superAdmin') {
             return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized: Only superAdmin can show providers.',
+                'status' => false,
+                'message' => trans('messages.unauthorized_user'),
+                'data' => null
+
             ], 403);
         }
         $providers = UsersAccount::where('role', 'provider')->get();
 
         return response()->json([
             'status' => true,
-            'message' => 'Providers retrived successfully',
+            'message' => trans('messages.providers_retrieved_successfully'),
             'data' =>  AdminCrudsUsersResource::collection($providers),
         ]);
     }
@@ -172,8 +171,9 @@ class AdminAuthConroller extends Controller
         // تأكد أن المستخدم الحالي هو أدمن
         if (auth()->user()->role !== 'superAdmin') {
             return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized: Only superAdmin can update providers.',
+                'status' => false,
+                'message' => trans('messages.unauthorized_user'),
+                'data' => null,
             ], 403);
         }
         $provider = UsersAccount::where('role', 'provider')->find($id);
@@ -181,7 +181,7 @@ class AdminAuthConroller extends Controller
         if (!$provider) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Provider not found.',
+                'message' => trans('messages.provider_not_found'),
                 'data' => null
             ], 404);
         }
@@ -189,7 +189,6 @@ class AdminAuthConroller extends Controller
         // تحديث الصورة مباشرة باستخدام setter
         if ($request->hasFile('image')) {
             $provider->image = $request->file('image'); // سيستدعي setImageAttribute تلقائيًا4
-            // dd($provider->image);
         }
 
         // تحديث باقي بيانات المستخدم
@@ -197,7 +196,7 @@ class AdminAuthConroller extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'provider updated successfully',
+            'message' => trans('messages.provider_updated_successfully'),
             'data' => new AdminCrudsUsersResource($provider),
         ]);
     }
@@ -208,8 +207,9 @@ class AdminAuthConroller extends Controller
         // تأكد أن المستخدم الحالي هو أدمن
         if (auth()->user()->role !== 'superAdmin') {
             return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized: Only superAdmin can update providers.',
+                'status' => false,
+                'message' => trans('messages.unauthorized_user'),
+                'data' => null,
             ], 403);
         }
         $provider = UsersAccount::where('role', 'provider')->find($id);
@@ -217,7 +217,7 @@ class AdminAuthConroller extends Controller
         if (!$provider) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Provider not found.',
+                'message' => trans('messages.provider_not_found'),
                 'data' => null
             ], 404);
         }
@@ -225,7 +225,7 @@ class AdminAuthConroller extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'provider deleted successfully',
+            'message' => trans('messages.provider_deleted_successfully'),
             'data' => null
         ]);
     }
@@ -236,8 +236,9 @@ class AdminAuthConroller extends Controller
         // تأكد أن المستخدم الحالي هو أدمن
         if (auth()->user()->role !== 'superAdmin') {
             return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized: Only superAdmin can create providers.',
+                'status' => false,
+                'message' => trans('messages.unauthorized_user'),
+                'data' => null,
             ], 403);
         }
         $role = $request->role ?? 'client';
@@ -254,7 +255,7 @@ class AdminAuthConroller extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'User created successfully',
+            'message' => trans('messages.user_created_successfully'),
             'data' => new AdminMakeUsersResource($user, $token, $expiresIn),
         ], 200);
     }
@@ -264,8 +265,9 @@ class AdminAuthConroller extends Controller
         // تأكد أن المستخدم الحالي هو أدمن
         if (auth()->user()->role !== 'superAdmin') {
             return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized: Only superAdmin can update providers.',
+                'status' => false,
+                'message' => trans('messages.unauthorized_user'),
+                'data' => null,
             ], 403);
         }
         $user = UsersAccount::where('role', 'client')->find($id);
@@ -273,7 +275,7 @@ class AdminAuthConroller extends Controller
         if (!$user) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'user not found.',
+                'message' => trans('messages.user_not_found'),
                 'data' => null
             ], 404);
         }
@@ -281,7 +283,6 @@ class AdminAuthConroller extends Controller
         // تحديث الصورة مباشرة باستخدام setter
         if ($request->hasFile('image')) {
             $user->image = $request->file('image'); // سيستدعي setImageAttribute تلقائيًا4
-            // dd($user->image);
         }
 
         // تحديث باقي بيانات المستخدم
@@ -289,7 +290,7 @@ class AdminAuthConroller extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'user updated successfully',
+            'message' => trans('messages.user_updated_successfully'),
             'data' => new AdminCrudsUsersResource($user),
         ]);
     }
@@ -299,8 +300,8 @@ class AdminAuthConroller extends Controller
         // تأكد أن المستخدم الحالي هو أدمن
         if (auth()->user()->role !== 'superAdmin') {
             return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized: Only superAdmin can show provider.',
+                'status' => false,
+                'message' => trans('messages.unauthorized_user'),
                 'data' => null
             ], 403);
         }
@@ -309,14 +310,15 @@ class AdminAuthConroller extends Controller
         if (!$user) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'user not found.',
+                'message' => trans('messages.user_not_found'),
                 'data' => null
             ], 404);
         }
 
         return response()->json([
             'status' => true,
-            'message' => 'user retrived successfully',
+            'message' => trans('messages.user_retrieved_successfully'),
+            
             'data' => new AdminCrudsUsersResource($user),
         ]);
     }
@@ -326,15 +328,16 @@ class AdminAuthConroller extends Controller
         // تأكد أن المستخدم الحالي هو أدمن
         if (auth()->user()->role !== 'superAdmin') {
             return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized: Only superAdmin can show providers.',
+                'status' => false,
+                'message' => trans('messages.unauthorized_user'),
+                'data' => null,
             ], 403);
         }
         $users = UsersAccount::where('role', 'client')->get();
 
         return response()->json([
             'status' => true,
-            'message' => 'Admins retrived successfully',
+            'message' => trans('messages.users_retrieved_successfully'),
             'data' =>  AdminCrudsUsersResource::collection($users),
         ]);
     }
@@ -344,8 +347,9 @@ class AdminAuthConroller extends Controller
         // تأكد أن المستخدم الحالي هو أدمن
         if (auth()->user()->role !== 'superAdmin') {
             return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized: Only superAdmin can update providers.',
+                'status' => false,
+                'message' => trans('messages.unauthorized_user'),
+                'data' => null
             ], 403);
         }
         $user = UsersAccount::where('role', 'client')->find($id);
@@ -353,7 +357,7 @@ class AdminAuthConroller extends Controller
         if (!$user) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'user not found.',
+                'message' => trans('messages.user_not_found'),
                 'data' => null
             ], 404);
         }
@@ -361,7 +365,8 @@ class AdminAuthConroller extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'user deleted successfully',
+            'message' => trans('messages.user_deleted_successfully'),
+            
             'data' => null
         ]);
     }
@@ -372,8 +377,8 @@ class AdminAuthConroller extends Controller
         // تأكد أن المستخدم الحالي هو أدمن
         if (auth()->user()->role !== 'superAdmin') {
             return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized: Only superAdmin can create another admins.',
+                'status' => false,
+                'message' => trans('messages.unauthorized_user'),
                 'data' => null,
             ], 403);
         }
@@ -391,7 +396,7 @@ class AdminAuthConroller extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'Admin created successfully',
+            'message' => trans('messages.admin_created_successfully'),
             'data' => new AdminMakeUsersResource($admin, $token, $expiresIn),
         ], 200);
     }
@@ -402,8 +407,9 @@ class AdminAuthConroller extends Controller
         // تأكد أن المستخدم الحالي هو أدمن
         if (auth()->user()->role !== 'superAdmin') {
             return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized: Only superAdmin can update providers.',
+                'status' => false,
+                'message' => trans('messages.unauthorized_user'),
+                'data'=>null
             ], 403);
         }
         $admin = UsersAccount::where('role', 'admin')->find($id);
@@ -411,7 +417,8 @@ class AdminAuthConroller extends Controller
         if (!$admin) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'admin not found.',
+                'message' => trans('messages.admin_not_found'),
+                
                 'data' => null
             ], 404);
         }
@@ -427,7 +434,8 @@ class AdminAuthConroller extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'admin updated successfully',
+            'message' => trans('messages.admin_updated_successfully'),
+            
             'data' => new AdminCrudsUsersResource($admin),
         ]);
     }
@@ -437,8 +445,8 @@ class AdminAuthConroller extends Controller
         // تأكد أن المستخدم الحالي هو أدمن
         if (auth()->user()->role !== 'superAdmin') {
             return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized: Only superAdmin can show provider.',
+                'status' => false,
+                'message' => trans('messages.unauthorized_user'),
                 'data' => null
             ], 403);
         }
@@ -447,14 +455,15 @@ class AdminAuthConroller extends Controller
         if (!$admin) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'admin not found.',
+                'message' => trans('messages.admin_not_found'),
                 'data' => null
             ], 404);
         }
 
         return response()->json([
             'status' => true,
-            'message' => 'admin retrived successfully',
+            'message' => trans('messages.admin_retrieved_successfully'),
+            
             'data' => new AdminCrudsUsersResource($admin),
         ]);
     }
@@ -464,15 +473,16 @@ class AdminAuthConroller extends Controller
         // تأكد أن المستخدم الحالي هو أدمن
         if (auth()->user()->role !== 'superAdmin') {
             return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized: Only superAdmin can show providers.',
+                'status' => false,
+                'message' => trans('messages.unauthorized_user'),
+                'data'=>null
             ], 403);
         }
         $admins = UsersAccount::where('role', 'admin')->get();
 
         return response()->json([
             'status' => true,
-            'message' => 'Admins retrived successfully',
+            'message' => trans('messages.admins_retrieved_successfully'),
             'data' =>  AdminCrudsUsersResource::collection($admins),
         ]);
     }
@@ -482,8 +492,9 @@ class AdminAuthConroller extends Controller
         // تأكد أن المستخدم الحالي هو أدمن
         if (auth()->user()->role !== 'superAdmin') {
             return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized: Only superAdmin can update providers.',
+                'status' => false,
+                'message' => trans('messages.unauthorized_user'),
+                'data'=>null
             ], 403);
         }
         $admin = UsersAccount::where('role', 'admin')->find($id);
@@ -491,7 +502,7 @@ class AdminAuthConroller extends Controller
         if (!$admin) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'admin not found.',
+                'message' => trans('messages.admin_not_found'),
                 'data' => null
             ], 404);
         }
@@ -499,7 +510,7 @@ class AdminAuthConroller extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'admin deleted successfully',
+            'message' => trans('messages.admin_deleted_successfully'),
             'data' => null
         ]);
     }

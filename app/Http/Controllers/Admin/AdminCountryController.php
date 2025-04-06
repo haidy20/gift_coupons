@@ -16,14 +16,18 @@ class AdminCountryController extends Controller
     public function index()
     {
         $user = auth('api')->user();
-        if ($user->role !== 'admin') {
-            return response()->json(['status' => 'error', 'message' => 'Only admins can get all country codes.', 'data' => null], 403);
+        if ($user->role !== 'superAdmin') {
+            return response()->json([
+                'status' => 'error',
+                'message' => trans('messages.unauthorized_user'),
+                'data' => null
+            ], 403);
         }
         $countries = Country::all();
 
         return response()->json([
             'success' => true,
-            'message' => 'Country codes retrived successfully',
+            'message' => trans('messages.countries_retrieved_successfully'),
             'data' => AdminCountryResource::collection($countries)
         ], 200);
     }
@@ -31,15 +35,19 @@ class AdminCountryController extends Controller
     public function create(AdminCountryRequest $request)
     {
         $user = auth('api')->user();
-        if ($user->role !== 'admin') {
-            return response()->json(['status' => 'error', 'message' => 'Only admins can create country codes.', 'data' => null], 403);
+        if ($user->role !== 'superAdmin') {
+            return response()->json([
+                'status' => 'error',
+                'message' => trans('messages.unauthorized_user'),
+                'data' => null
+            ], 403);
         }
 
         $country = Country::create($request->validated());
 
         return response()->json([
             'success' => true,
-            'message' => 'Country code created successfully',
+            'message' => trans('messages.country_created_successfully'),
             'data' => new AdminCountryResource($country),
         ], 200);
     }
@@ -47,17 +55,25 @@ class AdminCountryController extends Controller
     public function show($id)
     {
         $user = auth('api')->user();
-        if ($user->role !== 'admin') {
-            return response()->json(['status' => 'error', 'message' => 'Only admins can show country code.', 'data' => null], 403);
+        if ($user->role !== 'superAdmin') {
+            return response()->json([
+                'status' => 'error',
+                'message' => trans('messages.unauthorized_user'),
+                'data' => null
+            ], 403);
         }
         $country = Country::find($id);
 
         if (!$country) {
-            return response()->json(['status' => 'error', 'message' => 'Country code does not exist', 'data' => null], 404); // إرجاع رسالة خطأ في حالة عدم وجود الكود
+            return response()->json([
+                'status' => 'error',
+                'message' => trans('messages.country_not_found'),
+                'data' => null
+            ], 404); // إرجاع رسالة خطأ في حالة عدم وجود الكود
         }
         return response()->json([
             'success' => true,
-            'message' => 'Country code retrived successfully',
+            'message' => trans('messages.country_retrieved_successfully'),
             'data' => new AdminCountryResource($country),
         ], 200);
     }
@@ -65,20 +81,28 @@ class AdminCountryController extends Controller
     public function update(AdminCountryRequest $request, $id)
     {
         $user = auth('api')->user();
-        if ($user->role !== 'admin') {
-            return response()->json(['status' => 'error', 'message' => 'Only admins can update country codes.', 'data' => null], 403);
+        if ($user->role !== 'superAdmin') {
+            return response()->json([
+                'status' => 'error',
+                'message' => trans('messages.unauthorized_user'),
+                'data' => null
+            ], 403);
         }
 
         $country = Country::find($id);
         if (!$country) {
-            return response()->json(['status' => 'error', 'message' => 'Country code does not exist', 'data' => null], 404); // إرجاع رسالة خطأ في حالة عدم وجود الكود
+            return response()->json([
+                'status' => 'error',
+                'message' => trans('messages.country_not_found'),
+                'data' => null
+            ], 404); // إرجاع رسالة خطأ في حالة عدم وجود الكود
         }
         $validated = $request->validated();
 
         if ($country->country_name == 'country_name' && $request->has('country_code') && $validated['country_code'] != 'FixedCode') {
             return response()->json([
                 'status' => 'error',
-                'message' => 'The country code for country name cannot be changed.',
+                'message' => trans('messages.unauthorized_country_code'),
                 'data' => null
             ], 400);
         }
@@ -100,7 +124,7 @@ class AdminCountryController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Country code updated successfully',
+            'message' => trans('messages.country_updated_successfully'),
             'data' => new AdminCountryResource($country),
         ], 200);
     }
@@ -108,20 +132,28 @@ class AdminCountryController extends Controller
     public function destroy($id)
     {
         $user = auth('api')->user();
-        if ($user->role !== 'admin') {
-            return response()->json(['status' => 'error', 'message' => 'Only admins can delete countries.', 'data' => null], 403);
+        if ($user->role !== 'superAdmin') {
+            return response()->json([
+                'status' => 'error',
+                'message' => trans('messages.unauthorized_user'),
+                'data' => null
+            ], 403);
         }
 
         $country = Country::find($id);
 
         if (!$country) {
-            return response()->json(['status' => 'error', 'message' => 'country not found', 'data' => null], 404);
+            return response()->json([
+                'status' => 'error',
+                'message' => trans('messages.country_not_found'),
+                'data' => null
+            ], 404);
         }
         $country->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'Country code deleted successfully',
+            'message' => trans('messages.country_deleted_successfully'),
             'data' => null
         ], 200);
     }

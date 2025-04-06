@@ -36,7 +36,7 @@ class AdminNotificationController extends Controller
         if ($notifications->isEmpty()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'No notifications available.',
+                'message' => trans('messages.unauthorized_user'),
                 'data' => null
             ], 404);
         }
@@ -49,7 +49,7 @@ class AdminNotificationController extends Controller
 
         // إرجاع جميع الإشعارات باستخدام Resource
         return response()->json([
-            'success' => true,
+            'status' => true,
             'message' => 'Notifications retrieved successfully.',
             // 'data' => NotificationResource::collection($notificationResource)
             'data' => $notificationResource

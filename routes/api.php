@@ -89,12 +89,13 @@ Route::prefix('admin')->group(function () {
 
     Route::middleware('auth:api')->group(function () {
         //Create Static pages
-        Route::post('create/terms', [AdminTermTranslationController::class, 'create'])
-        ->name('admin.createTerms')
-        ->middleware('custom.permission:admin.createTerms');
+        Route::post('create/terms', [AdminTermTranslationController::class, 'create']);
+        // ->name('admin.createTerms')
+        // ->middleware('custom.permission:admin.createTerms');
 
         Route::post('create/policies', [AdminPolicyTranslationController::class, 'create']);
-        Route::post('create/about-us', [AdminAboutUsTranslationController::class, 'create'])->middleware('custom.permission:admin.createAboutUs');
+        Route::post('create/about-us', [AdminAboutUsTranslationController::class, 'create']);
+        // ->middleware('custom.permission:admin.createAboutUs');
         
         Route::get('/vouchers', [AdminVoucherController::class, 'getVouchers']);
 

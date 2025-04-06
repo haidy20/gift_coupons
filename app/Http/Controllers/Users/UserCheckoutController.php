@@ -75,9 +75,7 @@ class UserCheckoutController extends Controller
             // تحديد وقت الإشعار قبل انتهاء الصلاحية دقيقة مثلاً
             $notifyAt = now()->addMinutes(1);
             NotifyUserVoucherExpiry::dispatch($user, $voucher, $expiryDate)->delay($notifyAt);
-            
-            // Log::info('Expiry Date:', ['expiry_date' => $expiryDate]);
-
+        
             $transactionAmount = $voucher->amount * ($voucher->pivot->quantity ?? 1);
 
             // ✅ إرسال إشعار للبروفايدر

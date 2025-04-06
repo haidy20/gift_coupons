@@ -16,13 +16,17 @@ class AdminContactController extends Controller
     public function show()
     {
         $user = auth('api')->user();
-        if (!$user || $user->role !== 'admin') {
-            return response()->json(['status' => 'error', 'message' => 'Only admins can see the information.', 'data' => null], 403);
+        if (!$user || $user->role !== 'superAdmin') {
+            return response()->json([
+                'status' => 'error',
+                'message' => trans('messages.unauthorized_user'),
+                'data' => null
+            ], 403);
         }
         $contacts = Contact::all(); // جلب جميع السجلات
         return response()->json([
             'success' => true,
-            'message' => 'Contacts retrieved successfully',
+            'message' => trans('messages.contacts_retrieved_successfully'),
             'data' => AdminShowContactResource::collection($contacts), // تحويل البيانات باستخدام الريسورس
         ], 200);
     }
@@ -33,7 +37,7 @@ class AdminContactController extends Controller
         if (!$user || $user->role !== 'superAdmin') {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Only superAdmin can read this field.',
+                'message' => trans('messages.unauthorized_user'),
                 'data' => null
             ], 403);
         }
@@ -42,7 +46,7 @@ class AdminContactController extends Controller
         if (!$contact) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Contact not found.',
+                'message' => trans('messages.contact_not_found'),
                 'data' => null
             ], 404);
         }
@@ -52,8 +56,8 @@ class AdminContactController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Contact marked as read.',
-            'data' => new AdminShowContactResource ($contact)
+            'message' => trans('messages.contact_marked_read'),
+            'data' => new AdminShowContactResource($contact)
         ], 200);
     }
 }

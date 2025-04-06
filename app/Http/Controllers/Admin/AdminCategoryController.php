@@ -19,20 +19,20 @@ class AdminCategoryController extends Controller
         $user = auth('api')->user();
         // $user = auth('api')->user();
 
-        if ($user->role !== 'admin') {
+        if ($user->role !== 'superAdmin') {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Only admins can see all categories.',
+                'message' => trans('messages.unauthorized_user'),
                 'data' => null
             ], 403);
         }
-    
+
         $categories = Category::get();
         // $categories = Category::all();
 
         return response()->json([
             'success' => true,
-            'message' => 'Categories retrieved successfully',
+            'message' => trans('messages.categories_retrieved_successfully'),
             'data' => AdminCategoryResource::collection($categories),
         ], 200);
     }
@@ -41,10 +41,10 @@ class AdminCategoryController extends Controller
     public function create(AdminCategoryRequest $request)
     {
         $user = auth('api')->user();
-        if ($user->role !== 'admin') {
+        if ($user->role !== 'superAdmin') {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Only admins can create categories.',
+                'message' => trans('messages.unauthorized_user'),
                 'data' => null
             ], 403);
         }
@@ -57,7 +57,7 @@ class AdminCategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Category created successfully',
+            'message' => trans('messages.category_created_successfully'),
             'data' => new AdminCategoryResource($category),
         ], 200);
     }
@@ -67,19 +67,27 @@ class AdminCategoryController extends Controller
     public function show($id)
     {
         $user = auth('api')->user();
-        if ($user->role !== 'admin') {
-            return response()->json(['status' => 'error', 'message' => 'Only admins can show category.', 'data' => null], 403);
+        if ($user->role !== 'superAdmin') {
+            return response()->json([
+                'status' => 'error',
+                'message' => trans('messages.unauthorized_user'),
+                'data' => null
+            ], 403);
         }
 
         $category = Category::find($id);
 
         if (!$category) {
-            return response()->json(['status' => 'error', 'message' => 'Category not found', 'data' => null], 404);
+            return response()->json([
+                'status' => 'error',
+                'message' => trans('messages.category_not_found'),
+                'data' => null
+            ], 404);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Category retrieved successfully',
+            'message' => trans('messages.category_retrieved_successfully'),
             'data' => new AdminCategoryResource($category),
         ], 200);
     }
@@ -88,13 +96,21 @@ class AdminCategoryController extends Controller
     public function update(AdminCategoryRequest $request, $id)
     {
         $user = auth('api')->user();
-        if ($user->role !== 'admin') {
-            return response()->json(['status' => 'error', 'message' => 'Only admins can update categories.', 'data' => null], 403);
+        if ($user->role !== 'superAdmin') {
+            return response()->json([
+                'status' => 'error',
+                'message' => trans('messages.unauthorized_user'),
+                'data' => null
+            ], 403);
         }
 
         $category = Category::find($id);
         if (!$category) {
-            return response()->json(['status' => 'error', 'message' => 'Category not found', 'data' => null], 404);
+            return response()->json([
+                'status' => 'error',
+                'message' => trans('messages.category_not_found'),
+                'data' => null
+            ], 404);
         }
 
         $data = $request->validated();
@@ -107,7 +123,7 @@ class AdminCategoryController extends Controller
         // return response()->json($category);
         return response()->json([
             'success' => true,
-            'message' => 'Category updated successfully',
+            'message' => trans('messages.category_updated_successfully'),
             'data' => new AdminCategoryResource($category),
         ], 200);
     }
@@ -116,21 +132,29 @@ class AdminCategoryController extends Controller
     public function destroy($id)
     {
         $user = auth('api')->user();
-        if ($user->role !== 'admin') {
-            return response()->json(['status' => 'error', 'message' => 'Only admins can delete categories.', 'data' => null], 403);
+        if ($user->role !== 'superAdmin') {
+            return response()->json([
+                'status' => 'error',
+                'message' => trans('messages.unauthorized_user'),
+                'data' => null
+            ], 403);
         }
 
         $category = Category::find($id);
 
         if (!$category) {
-            return response()->json(['status' => 'error', 'message' => 'Category not found', 'data' => null], 404);
+            return response()->json([
+                'status' => 'error',
+                'message' => trans('messages.category_not_found'),
+                'data' => null
+            ], 404);
         }
 
         $category->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'Category deleted successfully',
+            'message' => trans('messages.category_deleted_successfully'),
             'data' => null,
         ], 200);
     }
