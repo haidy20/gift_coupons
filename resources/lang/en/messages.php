@@ -66,19 +66,24 @@ return [
     'feedback_rejected_successfully' => 'Feedback request rejected successfully.',
     'feedback_not_found' => 'Feedback not found.',
 
-// الترجمة للإشعارات - Arabic
-'feedback_rejected_title' => 'تم رفض التعليق',
-'feedback_rejected_body' => 'تم رفض تعليقك بواسطة المشرف العام.',
+    // Notfications trans
+    'feedback_rejected_title' => 'Feedback Rejected',
+    'feedback_rejected_body' => 'Your feedback has been rejected by the superAdmin..',
 
-'feedback_approved_title' => 'تم قبول التعليق',
-'feedback_approved_body' => 'تمت الموافقة على تعليقك وتم حفظه.',
+    'feedback_approved_title' => 'Feedback Approved',
+    'feedback_approved_body' => 'Your feedback has been approved and saved.',
+    //////////////////////////////////////////Admin notification/////////////////////////////////////////////
+    'notfications_not_found' => 'Notfications not found.',
+    'notfication_not_found' => 'Notfication not found.',
+
+    'notfication_deleted' => 'Notfication has been deleted.',
+    'notfications_deleted' => 'All Notfications has been deleted.',
+
+    'notifications_retrieved_successfully' => 'Notifications retrieved successfully.',
+    'notifications_sent_successfully' => 'Notifications sent successfully.',
 
 
-    
-    
 
-    
-    
 
 
 ];

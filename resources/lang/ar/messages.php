@@ -64,13 +64,22 @@ return [
     'feedback_approved_successfully' => 'تم قبول طلب التعليق بنجاح.',
     'feedback_rejected_successfully' => 'تم رفض طلب التعليق بنجاح.',
     'feedback_not_found' => 'لم يتم العثور على التعليق.',
-    
+
     // Notfications trans
     'feedback_rejected_title' => 'تم رفض التعليق',
     'feedback_rejected_body' => 'تم رفض تعليقك بواسطة المشرف العام.',
 
     'feedback_approved_title' => 'تم قبول التعليق',
     'feedback_approved_body' => 'تمت الموافقة على تعليقك وتم حفظه.',
+    //////////////////////////////////////////Admin notification/////////////////////////////////////////////
+    'notfications_not_found' => 'لم يتم العثور على الإشعارات.',
+    'notfication_not_found' => 'لم يتم العثور على الإشعار.',
+
+    'notfication_deleted' => 'تم حذف الإشعار.',
+    'notfications_deleted' => 'تم حذف جميع الإشعارات.',
+
+    'notifications_retrieved_successfully' => 'تم جلب الإشعارات بنجاح.',
+    'notifications_sent_successfully' => 'تم إرسال الإشعارات بنجاح.',
 
 
 ];

@@ -21,8 +21,6 @@ class AdminNotificationController extends Controller
 
     public function getNotificationsAndMarkAsRead()
     {
-        // جلب جميع الإشعارات الخاصة بالمستخدم الحالي
-        // $notifications = auth('api')->user()->notifications;
 
         $user = auth('api')->user();
         // جلب جميع الإشعارات الخاصة بالمستخدم الحالي
@@ -36,7 +34,7 @@ class AdminNotificationController extends Controller
         if ($notifications->isEmpty()) {
             return response()->json([
                 'status' => 'error',
-                'message' => trans('messages.unauthorized_user'),
+                'message' => trans('messages.notfications_not_found'),
                 'data' => null
             ], 404);
         }
@@ -50,7 +48,7 @@ class AdminNotificationController extends Controller
         // إرجاع جميع الإشعارات باستخدام Resource
         return response()->json([
             'status' => true,
-            'message' => 'Notifications retrieved successfully.',
+            'message' => trans('messages.notifications_retrieved_successfully'),
             // 'data' => NotificationResource::collection($notificationResource)
             'data' => $notificationResource
 
@@ -65,7 +63,8 @@ class AdminNotificationController extends Controller
         if (!$user || $user->role !== 'superAdmin') {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unauthorized. Only superAdmin can send notifications.',
+                'message' => trans('messages.unauthorized_user'),
+                'data'=>null
             ], 403);
         }
 
@@ -83,7 +82,7 @@ class AdminNotificationController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Notifications sent successfully.',
+            'message' => trans('messages.notifications_sent_successfully'),
             'data' => null
         ], 200);
     }
@@ -98,7 +97,7 @@ class AdminNotificationController extends Controller
         if (!$notification) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Notification not found',
+                'message' => trans('messages.notfication_not_found'),
                 'data' => null
 
             ], 404);
@@ -108,7 +107,7 @@ class AdminNotificationController extends Controller
         if ($notification->notifiable_id !== $user->id) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unauthorized.',
+                'message' => trans('messages.unauthorized_user'),
                 'data' => null
             ], 403);
         }
@@ -116,7 +115,7 @@ class AdminNotificationController extends Controller
         $notification->delete();
         return response()->json([
             'status' => 'success',
-            'message' => 'Notification deleted successfully',
+            'message' => trans('messages.notfication_deleted'),
             'data' => null
         ], 200);
     }
@@ -129,7 +128,7 @@ class AdminNotificationController extends Controller
         if (!$user || $user->notifications()->count() == 0) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unauthorized: No notifications found for this user',
+                'message' => trans('messages.unauthorized_user'),
                 'data' => null,
             ], 403);
         }
@@ -138,7 +137,7 @@ class AdminNotificationController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'All notifications deleted successfully',
+            'message' => trans('messages.notfications_deleted'),
             'data' => null,
         ], 200);
     }

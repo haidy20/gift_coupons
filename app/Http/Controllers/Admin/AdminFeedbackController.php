@@ -24,7 +24,7 @@ class AdminFeedbackController extends Controller
             ], 403);
         }
         $feedback = Feedback::find($feedbackId);
-    
+
         if (!$feedback) {
             return response()->json([
                 'status' => 'error',
@@ -32,7 +32,7 @@ class AdminFeedbackController extends Controller
                 'data' => null
             ], 404);
         }
-    
+
         // ✅ تحديث حالة الفيدباك إلى "مقبول"
         $feedback->update(['status' => 'approved']);
 
@@ -40,18 +40,18 @@ class AdminFeedbackController extends Controller
         $user->notify(new GeneralNotification(
             // 'Feedback Approved',
             //  'Your feedback has been approved and saved.'
-            
-             trans('messages.feedback_approved_title'),
-             trans('messages.feedback_approved_body')
-            ));
-    
+
+            trans('messages.feedback_approved_title'),
+            trans('messages.feedback_approved_body')
+        ));
+
         return response()->json([
             'status' => 'success',
             'message' => trans('messages.feedback_approved_successfully'),
             'data' => new AdminFeedbackResource($feedback)
         ], 200);
     }
-    
+
 
     // ❌ رفض الفيدباك
     public function rejectFeedback($feedbackId)
@@ -66,7 +66,7 @@ class AdminFeedbackController extends Controller
         }
 
         $feedback = Feedback::find($feedbackId);
-    
+
         if (!$feedback) {
             return response()->json([
                 'status' => 'error',
@@ -74,18 +74,18 @@ class AdminFeedbackController extends Controller
                 'data' => null
             ], 404);
         }
-    
+
         // ✅ تحديث حالة الفيدباك إلى "مرفوض"
         $feedback->update(['status' => 'rejected']);
-    
+
         // ✅ إرسال إشعار للمستخدم بأن الفيدباك تم رفضه
         $user = $feedback->user;
         $user->notify(new GeneralNotification(
             // 'Feedback Rejected',
             //  'Your feedback has been rejected by the superAdmin.'
 
-             trans('messages.feedback_rejected_title'),
-             trans('messages.feedback_rejected_body')
+            trans('messages.feedback_rejected_title'),
+            trans('messages.feedback_rejected_body')
         ));
 
         return response()->json([
